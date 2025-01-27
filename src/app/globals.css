@@ -2,6 +2,67 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Global buton ve input focus stillerini kaldır */
+@layer base {
+  button,
+  [type="button"],
+  [type="reset"],
+  [type="submit"],
+  input,
+  select,
+  textarea {
+    @apply focus:outline-none focus:ring-0 focus:ring-offset-0;
+  }
+}
+
+/* Takvim butonları için özel stiller */
+.rbc-toolbar button:focus,
+.rbc-toolbar button:active,
+.rbc-toolbar button.rbc-active {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+/* Link elementleri için focus stillerini kaldır */
+a:focus,
+a:focus-visible,
+button:focus-visible {
+  outline: none !important;
+  box-shadow: none !important;
+  @apply focus:outline-none focus:ring-0 focus:ring-offset-0;
+}
+
+/* Tüm interaktif elementler için hover durumunda cursor-pointer */
+button,
+[type="button"],
+[type="reset"],
+[type="submit"],
+a {
+  @apply hover:cursor-pointer;
+}
+
+/* Tüm butonlar için focus-visible durumunu kaldır */
+*:focus-visible {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+/* Özel buton focus stillerini kaldır */
+button {
+  outline: none !important;
+  box-shadow: none !important;
+  -webkit-tap-highlight-color: transparent;
+}
+
+button:focus,
+button:focus-visible,
+button:active,
+button:focus-within {
+  outline: none !important;
+  box-shadow: none !important;
+  -webkit-tap-highlight-color: transparent;
+}
+
 :root {
   --background: #ffffff;
   --foreground: #171717;
