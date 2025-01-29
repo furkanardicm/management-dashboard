@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { ordersApi } from '@/lib/services/api';
 import { useRouter } from 'next/navigation';
 import { 
@@ -8,7 +8,10 @@ import {
   FunnelIcon,
   MagnifyingGlassIcon,
   ArrowPathIcon,
-  DocumentArrowDownIcon
+  DocumentArrowDownIcon,
+  PencilSquareIcon,
+  CheckIcon,
+  XMarkIcon
 } from '@heroicons/react/24/outline';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
@@ -16,26 +19,65 @@ import 'jspdf-autotable';
 export default function Orders() {
   const router = useRouter();
   const [orders, setOrders] = useState([]);
+  const [filteredOrders, setFilteredOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedProject, setSelectedProject] = useState('');
   const [dateFilter, setDateFilter] = useState({
     startDate: '',
     endDate: ''
   });
+  const [editingOrder, setEditingOrder] = useState(null);
+
+  const filterOrders = useCallback(() => {
+    let filtered = [...orders];
+
+    // Proje filtresi
+    if (selectedProject) {
+      filtered = filtered.filter(order => order.project === selectedProject);
+    }
+
+    // Tarih filtresi
+    if (dateFilter.startDate) {
+      filtered = filtered.filter(order => 
+        new Date(order.date) >= new Date(dateFilter.startDate)
+      );
+    }
+
+    if (dateFilter.endDate) {
+      filtered = filtered.filter(order => 
+        new Date(order.date) <= new Date(dateFilter.endDate)
+      );
+    }
+
+    setFilteredOrders(filtered);
+  }, [orders, selectedProject, dateFilter]);
 
   useEffect(() => {
     loadOrders();
   }, []);
 
+  useEffect(() => {
+    filterOrders();
+  }, [filterOrders]);
+
   const loadOrders = async () => {
     try {
       const data = await ordersApi.getOrders();
       setOrders(data);
+      setFilteredOrders(data);
     } catch (error) {
       console.error('Siparişler yüklenirken hata:', error);
     } finally {
       setLoading(false);
     }
+  };
+
+  const resetFilters = () => {
+    setSelectedProject('');
+    setDateFilter({
+      startDate: '',
+      endDate: ''
+    });
   };
 
   const getStatusBadgeClass = (status) => {
@@ -103,7 +145,7 @@ export default function Orders() {
     };
 
     // Tablo verileri
-    const data = orders.map(order => [
+    const data = filteredOrders.map(order => [
       { content: `#${order.id}`, styles: { halign: 'center' } },
       { content: turkishToEnglish(order.customerName), styles: { halign: 'left' } },
       { content: formatDate(order.date), styles: { halign: 'center' } },
@@ -171,6 +213,20 @@ export default function Orders() {
     doc.save(`siparisler_${new Date().toLocaleDateString('tr-TR').replace(/\./g, '_')}.pdf`);
   };
 
+  const handleStatusUpdate = async (orderId, newStatus) => {
+    try {
+      setLoading(true);
+      await ordersApi.updateOrderStatus(orderId, newStatus);
+      // Siparişleri yeniden yükle
+      await loadOrders();
+      setEditingOrder(null);
+    } catch (error) {
+      console.error('Sipariş durumu güncellenirken hata:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   if (loading) return <div>Yükleniyor...</div>;
 
   return (
@@ -197,17 +253,25 @@ export default function Orders() {
 
       {/* Filtreler */}
       <div className="bg-white p-4 rounded-lg shadow space-y-4">
-        <h2 className="text-lg font-medium text-gray-900 flex items-center">
-          <FunnelIcon className="h-5 w-5 mr-2" />
-          Filtreler
-        </h2>
+        <div className="flex items-center justify-between">
+          <h2 className="text-lg font-medium text-gray-900 flex items-center">
+            <FunnelIcon className="h-5 w-5 mr-2" />
+            Filtreler
+          </h2>
+          <button
+            onClick={resetFilters}
+            className="text-sm text-gray-600 hover:text-gray-900"
+          >
+            Filtreleri Temizle
+          </button>
+        </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700">Proje</label>
             <select
               value={selectedProject}
               onChange={(e) => setSelectedProject(e.target.value)}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm text-gray-900 sm:text-sm"
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-gray-900 sm:text-sm"
             >
               <option value="">Tüm Projeler</option>
               <option value="project1">Proje 1</option>
@@ -219,8 +283,8 @@ export default function Orders() {
             <input
               type="date"
               value={dateFilter.startDate}
-              onChange={(e) => setDateFilter({ ...dateFilter, startDate: e.target.value })}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm text-gray-900 sm:text-sm"
+              onChange={(e) => setDateFilter(prev => ({ ...prev, startDate: e.target.value }))}
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-gray-900 sm:text-sm"
             />
           </div>
           <div>
@@ -228,8 +292,8 @@ export default function Orders() {
             <input
               type="date"
               value={dateFilter.endDate}
-              onChange={(e) => setDateFilter({ ...dateFilter, endDate: e.target.value })}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm text-gray-900 sm:text-sm"
+              onChange={(e) => setDateFilter(prev => ({ ...prev, endDate: e.target.value }))}
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-gray-900 sm:text-sm"
             />
           </div>
         </div>
@@ -262,7 +326,7 @@ export default function Orders() {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {orders.map((order) => (
+              {filteredOrders.map((order) => (
                 <tr key={order.id} className="hover:bg-gray-50">
                   <td className="px-6 py-4 whitespace-nowrap text-center">
                     <span className="text-sm font-medium text-gray-900">#{order.id}</span>
@@ -284,13 +348,48 @@ export default function Orders() {
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-center">
-                    <button
-                      onClick={() => router.push(`/dashboard/orders/${order.id}`)}
-                      className="inline-flex items-center justify-center p-2 text-indigo-600 hover:text-indigo-900 hover:bg-indigo-50 rounded-full transition-colors duration-200"
-                      title="Sipariş Detayı"
-                    >
-                      <MagnifyingGlassIcon className="h-5 w-5" />
-                    </button>
+                    <div className="flex items-center justify-center space-x-2">
+                      <button
+                        onClick={() => router.push(`/dashboard/orders/${order.id}`)}
+                        className="inline-flex items-center justify-center p-2 text-indigo-600 hover:text-indigo-900 hover:bg-indigo-50 rounded-full transition-colors duration-200"
+                        title="Sipariş Detayı"
+                      >
+                        <MagnifyingGlassIcon className="h-5 w-5" />
+                      </button>
+                      {editingOrder === order.id ? (
+                        <>
+                          <button
+                            onClick={() => handleStatusUpdate(order.id, 'approved')}
+                            className="inline-flex items-center justify-center p-2 text-green-600 hover:text-green-900 hover:bg-green-50 rounded-full transition-colors duration-200"
+                            title="Onayla"
+                          >
+                            <CheckIcon className="h-5 w-5" />
+                          </button>
+                          <button
+                            onClick={() => handleStatusUpdate(order.id, 'rejected')}
+                            className="inline-flex items-center justify-center p-2 text-red-600 hover:text-red-900 hover:bg-red-50 rounded-full transition-colors duration-200"
+                            title="Reddet"
+                          >
+                            <XMarkIcon className="h-5 w-5" />
+                          </button>
+                          <button
+                            onClick={() => setEditingOrder(null)}
+                            className="inline-flex items-center justify-center p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-full transition-colors duration-200"
+                            title="İptal"
+                          >
+                            <XMarkIcon className="h-5 w-5" />
+                          </button>
+                        </>
+                      ) : (
+                        <button
+                          onClick={() => setEditingOrder(order.id)}
+                          className="inline-flex items-center justify-center p-2 text-indigo-600 hover:text-indigo-900 hover:bg-indigo-50 rounded-full transition-colors duration-200"
+                          title="Durumu Güncelle"
+                        >
+                          <PencilSquareIcon className="h-5 w-5" />
+                        </button>
+                      )}
+                    </div>
                   </td>
                 </tr>
               ))}

@@ -1,42 +1,121 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { ordersApi } from '@/lib/services/api';
-import { ChartBarIcon, ArrowTrendingUpIcon, CurrencyDollarIcon, BuildingOfficeIcon } from '@heroicons/react/24/outline';
+import { useRouter } from 'next/navigation';
+import { 
+  ArrowLeftIcon,
+  DocumentChartBarIcon,
+  ArrowTrendingUpIcon,
+  CurrencyDollarIcon,
+  BuildingOfficeIcon,
+  DocumentArrowDownIcon
+} from '@heroicons/react/24/outline';
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
 
 export default function OrdersReport() {
+  const router = useRouter();
   const [loading, setLoading] = useState(true);
-  const [stats, setStats] = useState({
-    totalOrders: 0,
-    totalRevenue: 0,
-    averageOrderValue: 0,
-    topSponsors: []
-  });
-  const [dateRange, setDateRange] = useState({
+  const [orders, setOrders] = useState([]);
+  const [dateFilter, setDateFilter] = useState({
     startDate: '',
     endDate: ''
   });
 
+  // İstatistikler
+  const [stats, setStats] = useState({
+    totalOrders: 0,
+    totalAmount: 0,
+    averageOrderValue: 0,
+    pendingOrders: 0,
+    approvedOrders: 0,
+    rejectedOrders: 0,
+    companyStats: [],
+    projectStats: []
+  });
+
+  const calculateStats = useCallback(() => {
+    let filteredOrders = [...orders];
+
+    // Tarih filtresi uygula
+    if (dateFilter.startDate) {
+      filteredOrders = filteredOrders.filter(order => 
+        new Date(order.date) >= new Date(dateFilter.startDate)
+      );
+    }
+    if (dateFilter.endDate) {
+      filteredOrders = filteredOrders.filter(order => 
+        new Date(order.date) <= new Date(dateFilter.endDate)
+      );
+    }
+
+    // Temel istatistikler
+    const totalOrders = filteredOrders.length;
+    const totalAmount = filteredOrders.reduce((sum, order) => sum + order.amount, 0);
+    const averageOrderValue = totalAmount / totalOrders || 0;
+    const pendingOrders = filteredOrders.filter(order => order.status === 'pending').length;
+    const approvedOrders = filteredOrders.filter(order => order.status === 'approved').length;
+    const rejectedOrders = filteredOrders.filter(order => order.status === 'rejected').length;
+
+    // Şirket bazlı istatistikler
+    const companyStats = filteredOrders.reduce((acc, order) => {
+      const company = acc.find(c => c.name === order.customerName);
+      if (company) {
+        company.orderCount++;
+        company.totalAmount += order.amount;
+      } else {
+        acc.push({
+          name: order.customerName,
+          orderCount: 1,
+          totalAmount: order.amount
+        });
+      }
+      return acc;
+    }, []).sort((a, b) => b.totalAmount - a.totalAmount);
+
+    // Proje bazlı istatistikler
+    const projectStats = filteredOrders.reduce((acc, order) => {
+      const project = acc.find(p => p.name === order.projectName);
+      if (project) {
+        project.orderCount++;
+        project.totalAmount += order.amount;
+      } else {
+        acc.push({
+          name: order.projectName,
+          orderCount: 1,
+          totalAmount: order.amount
+        });
+      }
+      return acc;
+    }, []).sort((a, b) => b.totalAmount - a.totalAmount);
+
+    setStats({
+      totalOrders,
+      totalAmount,
+      averageOrderValue,
+      pendingOrders,
+      approvedOrders,
+      rejectedOrders,
+      companyStats,
+      projectStats
+    });
+  }, [orders, dateFilter]);
+
   useEffect(() => {
-    loadStats();
+    loadOrders();
   }, []);
 
-  const loadStats = async () => {
+  useEffect(() => {
+    calculateStats();
+  }, [calculateStats]);
+
+  const loadOrders = async () => {
     try {
-      // Gerçek uygulamada API'den gelecek
-      const data = {
-        totalOrders: 150,
-        totalRevenue: 750000,
-        averageOrderValue: 5000,
-        topSponsors: [
-          { name: 'ABC Şirketi', totalAmount: 250000 },
-          { name: 'XYZ Limited', totalAmount: 200000 },
-          { name: 'DEF A.Ş.', totalAmount: 150000 }
-        ]
-      };
-      setStats(data);
+      const data = await ordersApi.getOrders();
+      setOrders(data);
     } catch (error) {
-      console.error('İstatistikler yüklenirken hata:', error);
+      console.error('Siparişler yüklenirken hata:', error);
     } finally {
       setLoading(false);
     }
@@ -49,51 +128,154 @@ export default function OrdersReport() {
     }).format(amount);
   };
 
-  if (loading) return <div>Yükleniyor...</div>;
+  const formatDate = (dateString) => {
+    return new Date(dateString).toLocaleDateString('tr-TR');
+  };
+
+  const generatePDF = () => {
+    const doc = new jsPDF();
+    
+    // Başlık
+    doc.setFontSize(20);
+    doc.text('Satış Raporu', 15, 15);
+    doc.setFontSize(10);
+    doc.text(`Oluşturulma Tarihi: ${formatDate(new Date())}`, 15, 22);
+
+    if (dateFilter.startDate || dateFilter.endDate) {
+      doc.text(`Filtre: ${dateFilter.startDate ? formatDate(dateFilter.startDate) : ''} - ${dateFilter.endDate ? formatDate(dateFilter.endDate) : ''}`, 15, 29);
+    }
+
+    // Genel İstatistikler
+    doc.setFontSize(14);
+    doc.text('Genel İstatistikler', 15, 40);
+    
+    const generalStats = [
+      ['Toplam Sipariş', stats.totalOrders.toString()],
+      ['Toplam Tutar', formatCurrency(stats.totalAmount)],
+      ['Ortalama Sipariş Tutarı', formatCurrency(stats.averageOrderValue)],
+      ['Bekleyen Siparişler', stats.pendingOrders.toString()],
+      ['Onaylanan Siparişler', stats.approvedOrders.toString()],
+      ['Reddedilen Siparişler', stats.rejectedOrders.toString()]
+    ];
+
+    doc.autoTable({
+      startY: 45,
+      head: [['Metrik', 'Değer']],
+      body: generalStats,
+      theme: 'grid',
+      headStyles: { fillColor: [66, 66, 66] }
+    });
+
+    // Şirket Bazlı İstatistikler
+    doc.setFontSize(14);
+    doc.text('Şirket Bazlı İstatistikler', 15, doc.autoTable.previous.finalY + 15);
+
+    doc.autoTable({
+      startY: doc.autoTable.previous.finalY + 20,
+      head: [['Şirket', 'Sipariş Sayısı', 'Toplam Tutar']],
+      body: stats.companyStats.map(company => [
+        company.name,
+        company.orderCount.toString(),
+        formatCurrency(company.totalAmount)
+      ]),
+      theme: 'grid',
+      headStyles: { fillColor: [66, 66, 66] }
+    });
+
+    // Proje Bazlı İstatistikler
+    doc.setFontSize(14);
+    doc.text('Proje Bazlı İstatistikler', 15, doc.autoTable.previous.finalY + 15);
+
+    doc.autoTable({
+      startY: doc.autoTable.previous.finalY + 20,
+      head: [['Proje', 'Sipariş Sayısı', 'Toplam Tutar']],
+      body: stats.projectStats.map(project => [
+        project.name,
+        project.orderCount.toString(),
+        formatCurrency(project.totalAmount)
+      ]),
+      theme: 'grid',
+      headStyles: { fillColor: [66, 66, 66] }
+    });
+
+    // PDF'i indir
+    doc.save(`satis_raporu_${new Date().toISOString().split('T')[0]}.pdf`);
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-semibold text-gray-900">Satış Raporu</h1>
+      {/* Başlık */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center space-x-4">
+          <button
+            onClick={() => router.back()}
+            className="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 rounded-md border border-gray-300 transition-colors duration-200"
+          >
+            <ArrowLeftIcon className="h-5 w-5 mr-2" />
+            Geri Dön
+          </button>
+          <h1 className="text-2xl font-semibold text-gray-900">
+            Satış Raporu
+          </h1>
+        </div>
+        <button 
+          onClick={generatePDF}
+          className="inline-flex items-center px-4 py-2 text-sm font-medium border text-black border-black bg-white hover:bg-black/5 rounded-md transition-colors duration-200"
+        >
+          <DocumentArrowDownIcon className="h-5 w-5 mr-2" />
+          PDF İndir
+        </button>
+      </div>
 
-      {/* Tarih Filtreleri */}
+      {/* Filtreler */}
       <div className="bg-white p-4 rounded-lg shadow">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div>
             <label className="block text-sm font-medium text-gray-700">Başlangıç Tarihi</label>
             <input
               type="date"
-              value={dateRange.startDate}
-              onChange={(e) => setDateRange({ ...dateRange, startDate: e.target.value })}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm text-gray-900 sm:text-sm p-3"
+              value={dateFilter.startDate}
+              onChange={(e) => setDateFilter(prev => ({ ...prev, startDate: e.target.value }))}
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-gray-900 sm:text-sm"
             />
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700">Bitiş Tarihi</label>
             <input
               type="date"
-              value={dateRange.endDate}
-              onChange={(e) => setDateRange({ ...dateRange, endDate: e.target.value })}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm text-gray-900 sm:text-sm"
+              value={dateFilter.endDate}
+              onChange={(e) => setDateFilter(prev => ({ ...prev, endDate: e.target.value }))}
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-gray-900 sm:text-sm"
             />
           </div>
         </div>
       </div>
 
-      {/* İstatistik Kartları */}
+      {/* Genel İstatistikler */}
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
         <div className="bg-white overflow-hidden shadow rounded-lg">
           <div className="p-5">
             <div className="flex items-center">
               <div className="flex-shrink-0">
-                <ChartBarIcon className="h-6 w-6 text-gray-400" />
+                <DocumentChartBarIcon className="h-6 w-6 text-gray-400" />
               </div>
               <div className="ml-5 w-0 flex-1">
                 <dl>
                   <dt className="text-sm font-medium text-gray-500 truncate">
                     Toplam Sipariş
                   </dt>
-                  <dd className="text-2xl font-semibold text-gray-900">
-                    {stats.totalOrders}
+                  <dd className="flex items-baseline">
+                    <div className="text-2xl font-semibold text-gray-900">
+                      {stats.totalOrders}
+                    </div>
                   </dd>
                 </dl>
               </div>
@@ -110,10 +292,12 @@ export default function OrdersReport() {
               <div className="ml-5 w-0 flex-1">
                 <dl>
                   <dt className="text-sm font-medium text-gray-500 truncate">
-                    Toplam Gelir
+                    Toplam Tutar
                   </dt>
-                  <dd className="text-2xl font-semibold text-gray-900">
-                    {formatCurrency(stats.totalRevenue)}
+                  <dd className="flex items-baseline">
+                    <div className="text-2xl font-semibold text-gray-900">
+                      {formatCurrency(stats.totalAmount)}
+                    </div>
                   </dd>
                 </dl>
               </div>
@@ -132,8 +316,10 @@ export default function OrdersReport() {
                   <dt className="text-sm font-medium text-gray-500 truncate">
                     Ortalama Sipariş Tutarı
                   </dt>
-                  <dd className="text-2xl font-semibold text-gray-900">
-                    {formatCurrency(stats.averageOrderValue)}
+                  <dd className="flex items-baseline">
+                    <div className="text-2xl font-semibold text-gray-900">
+                      {formatCurrency(stats.averageOrderValue)}
+                    </div>
                   </dd>
                 </dl>
               </div>
@@ -142,34 +328,111 @@ export default function OrdersReport() {
         </div>
       </div>
 
-      {/* En İyi Sponsorlar */}
-      <div className="bg-white shadow rounded-lg">
-        <div className="p-6">
+      {/* Sipariş Durumları */}
+      <div className="bg-white shadow rounded-lg overflow-hidden">
+        <div className="px-4 py-5 sm:p-6">
+          <h3 className="text-lg font-medium text-gray-900">Sipariş Durumları</h3>
+          <div className="mt-5 grid grid-cols-1 gap-5 sm:grid-cols-3">
+            <div className="bg-yellow-50 p-4 rounded-lg">
+              <div className="text-yellow-800">
+                <p className="text-sm font-medium">Bekleyen</p>
+                <p className="mt-2 text-3xl font-semibold">{stats.pendingOrders}</p>
+              </div>
+            </div>
+            <div className="bg-green-50 p-4 rounded-lg">
+              <div className="text-green-800">
+                <p className="text-sm font-medium">Onaylanan</p>
+                <p className="mt-2 text-3xl font-semibold">{stats.approvedOrders}</p>
+              </div>
+            </div>
+            <div className="bg-red-50 p-4 rounded-lg">
+              <div className="text-red-800">
+                <p className="text-sm font-medium">Reddedilen</p>
+                <p className="mt-2 text-3xl font-semibold">{stats.rejectedOrders}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Şirket Bazlı İstatistikler */}
+      <div className="bg-white shadow rounded-lg overflow-hidden">
+        <div className="px-4 py-5 sm:p-6">
           <h3 className="text-lg font-medium text-gray-900 flex items-center">
-            <BuildingOfficeIcon className="h-5 w-5 mr-2 text-gray-400" />
-            En İyi Sponsorlar
+            <BuildingOfficeIcon className="h-5 w-5 mr-2" />
+            Şirket Bazlı İstatistikler
           </h3>
-          <div className="mt-6">
+          <div className="mt-4">
             <div className="overflow-x-auto">
               <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Firma Adı
+                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Şirket
                     </th>
-                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th scope="col" className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Sipariş Sayısı
+                    </th>
+                    <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Toplam Tutar
                     </th>
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
-                  {stats.topSponsors.map((sponsor, index) => (
+                  {stats.companyStats.map((company, index) => (
                     <tr key={index} className="hover:bg-gray-50">
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                        {sponsor.name}
+                        {company.name}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-gray-900">
-                        {formatCurrency(sponsor.totalAmount)}
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
+                        {company.orderCount}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">
+                        {formatCurrency(company.totalAmount)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Proje Bazlı İstatistikler */}
+      <div className="bg-white shadow rounded-lg overflow-hidden">
+        <div className="px-4 py-5 sm:p-6">
+          <h3 className="text-lg font-medium text-gray-900 flex items-center">
+            <DocumentChartBarIcon className="h-5 w-5 mr-2" />
+            Proje Bazlı İstatistikler
+          </h3>
+          <div className="mt-4">
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Proje
+                    </th>
+                    <th scope="col" className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Sipariş Sayısı
+                    </th>
+                    <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Toplam Tutar
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {stats.projectStats.map((project, index) => (
+                    <tr key={index} className="hover:bg-gray-50">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                        {project.name}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
+                        {project.orderCount}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">
+                        {formatCurrency(project.totalAmount)}
                       </td>
                     </tr>
                   ))}

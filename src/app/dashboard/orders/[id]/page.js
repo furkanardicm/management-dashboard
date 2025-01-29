@@ -18,7 +18,7 @@ export default function OrderDetail({ params }) {
 
   const loadOrderDetails = useCallback(async () => {
     try {
-      const data = await ordersApi.getOrderById(params.id);
+      const data = await ordersApi.getOrderDetails(params.id);
       setOrder(data);
     } catch (error) {
       console.error('Sipariş detayları yüklenirken hata:', error);
