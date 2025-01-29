@@ -11,6 +11,7 @@ import getDay from 'date-fns/getDay';
 import tr from 'date-fns/locale/tr';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
 import { CalendarIcon, UserGroupIcon, BuildingOfficeIcon, DocumentTextIcon } from '@heroicons/react/24/outline';
+import { ChevronLeftIcon, ChevronRightIcon, CalendarDaysIcon } from '@heroicons/react/24/solid';
 import { calendarApi } from '@/lib/services/api';
 
 const locales = {
@@ -120,39 +121,6 @@ export default function Dashboard() {
     loadEvents();
   }, []);
 
-  // Özel etkinlik stilleri
-  const eventStyleGetter = (event) => {
-    let style = {
-      backgroundColor: '#4F46E5',
-      borderRadius: '4px',
-      opacity: 0.8,
-      color: 'white',
-      border: '0',
-      display: 'block'
-    };
-
-    switch (event.type) {
-      case 'birthday':
-        style.backgroundColor = '#EC4899';
-        break;
-      case 'meeting':
-        style.backgroundColor = '#4F46E5';
-        break;
-      case 'deadline':
-        style.backgroundColor = '#EF4444';
-        break;
-      case 'congress':
-        style.backgroundColor = '#10B981';
-        break;
-      default:
-        break;
-    }
-
-    return {
-      style
-    };
-  };
-
   const messages = {
     today: 'Bugün',
     previous: 'Önceki',
@@ -216,110 +184,223 @@ export default function Dashboard() {
         <h2 className="text-lg font-medium text-gray-900 mb-3">Etkinlik Türleri</h2>
         <div className="flex flex-wrap gap-4">
           <div className="flex items-center space-x-2">
-            <div className="w-3 h-3 rounded-full bg-[#4F46E5]"></div>
+            <div className="w-3 h-3 rounded-full bg-[#3730A3]"></div>
             <span className="text-sm text-gray-600">Toplantılar</span>
           </div>
           <div className="flex items-center space-x-2">
-            <div className="w-3 h-3 rounded-full bg-[#EC4899]"></div>
+            <div className="w-3 h-3 rounded-full bg-[#BE185D]"></div>
             <span className="text-sm text-gray-600">Doğum Günleri</span>
           </div>
           <div className="flex items-center space-x-2">
-            <div className="w-3 h-3 rounded-full bg-[#EF4444]"></div>
+            <div className="w-3 h-3 rounded-full bg-[#B91C1C]"></div>
             <span className="text-sm text-gray-600">Son Teslim Tarihleri</span>
           </div>
           <div className="flex items-center space-x-2">
-            <div className="w-3 h-3 rounded-full bg-[#10B981]"></div>
+            <div className="w-3 h-3 rounded-full bg-[#065F46]"></div>
             <span className="text-sm text-gray-600">Kongreler</span>
           </div>
+        </div>
+      </div>
+
+      {/* Etkinlik Listesi */}
+      <div className="bg-white p-6 rounded-lg shadow">
+        <h3 className="text-lg font-medium text-gray-900 mb-4">Bu Aydaki Etkinlikler</h3>
+        <div className="space-y-2.5">
+          {events.length === 0 ? (
+            <p className="text-gray-500 text-sm">Bu ay için planlanmış etkinlik bulunmuyor.</p>
+          ) : (
+            events.map((event) => {
+              let bgColor, textColor, dotColor;
+              switch (event.type) {
+                case 'birthday':
+                  bgColor = 'bg-pink-50';
+                  textColor = 'text-pink-700';
+                  dotColor = 'bg-pink-700';
+                  break;
+                case 'meeting':
+                  bgColor = 'bg-indigo-50';
+                  textColor = 'text-indigo-700';
+                  dotColor = 'bg-indigo-700';
+                  break;
+                case 'deadline':
+                  bgColor = 'bg-red-50';
+                  textColor = 'text-red-700';
+                  dotColor = 'bg-red-700';
+                  break;
+                case 'congress':
+                  bgColor = 'bg-emerald-50';
+                  textColor = 'text-emerald-700';
+                  dotColor = 'bg-emerald-700';
+                  break;
+                default:
+                  bgColor = 'bg-gray-50';
+                  textColor = 'text-gray-700';
+                  dotColor = 'bg-gray-700';
+              }
+
+              return (
+                <div key={event.id} className={`flex items-center justify-between p-2.5 rounded-lg ${bgColor} hover:bg-opacity-80 transition-colors duration-200`}>
+                  <div className="flex items-center min-w-0 flex-1">
+                    <div className={`w-2 h-2 rounded-full ${dotColor} opacity-80 flex-shrink-0`}></div>
+                    <div className="ml-2.5 truncate">
+                      <h4 className={`font-medium ${textColor} text-sm truncate`}>{event.title}</h4>
+                      <p className="text-xs text-gray-600">
+                        {format(event.start, 'dd MMMM yyyy', { locale: tr })}
+                        {event.start.getHours() !== 0 && (
+                          <span> • {format(event.start, 'HH:mm', { locale: tr })}</span>
+                        )}
+                      </p>
+                    </div>
+                  </div>
+                  <div className={`ml-3 px-2 py-0.5 rounded-full text-xs font-medium ${bgColor} ${textColor} flex-shrink-0`}>
+                    {event.type === 'birthday' && 'Doğum Günü'}
+                    {event.type === 'meeting' && 'Toplantı'}
+                    {event.type === 'deadline' && 'Son Tarih'}
+                    {event.type === 'congress' && 'Kongre'}
+                  </div>
+                </div>
+              );
+            })
+          )}
         </div>
       </div>
 
       {/* Takvim */}
       <div className="bg-white p-6 rounded-lg shadow">
         <style jsx global>{`
+          .rbc-calendar {
+            height: auto !important;
+          }
+          .rbc-month-view {
+            border-radius: 8px;
+            border: 1px solid #e5e7eb;
+            flex: none !important;
+            height: auto !important;
+          }
+          .rbc-month-row {
+            min-height: 60px !important;
+            max-height: 60px !important;
+          }
+          .rbc-row-content {
+            min-height: 60px !important;
+            max-height: 60px !important;
+          }
+          .rbc-row-bg {
+            min-height: 60px !important;
+            max-height: 60px !important;
+          }
+          .rbc-date-cell {
+            padding: 4px 8px !important;
+            text-align: center !important;
+          }
+          .rbc-date-cell > a {
+            font-size: 14px !important;
+            font-weight: 500 !important;
+            color: #000000 !important;
+          }
+          .rbc-button-link {
+            color: #000000 !important;
+          }
+          .rbc-off-range .rbc-button-link {
+            color: #9CA3AF !important;
+          }
+          .rbc-off-range-bg {
+            background-color: #f9fafb !important;
+          }
+          .rbc-header {
+            padding: 8px !important;
+            font-weight: 600;
+            color: #000000 !important;
+            font-size: 14px !important;
+            border-bottom: 1px solid #e5e7eb !important;
+          }
+          .rbc-today {
+            background-color: #eef2ff !important;
+          }
+          .rbc-event {
+            padding: 0 !important;
+            border-radius: 50% !important;
+            cursor: pointer;
+            position: relative;
+            width: 18px !important;
+            height: 18px !important;
+            margin: 2px auto !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            font-size: 10px !important;
+            color: white !important;
+            border: none !important;
+          }
           .rbc-toolbar {
             margin-bottom: 20px;
-            padding: 10px;
+            padding: 12px;
             background: #f9fafb;
             border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
           }
-          .rbc-toolbar button {
-            color: #1f2937;
-            border: 1px solid #d1d5db;
-            padding: 6px 12px;
-            border-radius: 6px;
-            background: white;
-            font-weight: 500;
-            outline: none !important;
-          }
-          .rbc-toolbar button:hover {
-            background-color: #f3f4f6;
-          }
-          .rbc-toolbar button.rbc-active {
-            background-color: #4F46E5;
-            color: white;
+          @media (min-width: 640px) {
+            .rbc-toolbar {
+              flex-direction: row;
+              align-items: center;
+              gap: 0;
+            }
           }
           .rbc-toolbar-label {
             color: #111827;
             font-weight: 600;
             font-size: 1.1rem;
+            text-align: center;
+            order: -1;
+            margin-bottom: 8px;
           }
-          .rbc-header {
-            padding: 10px;
-            font-weight: 600;
-            color: #111827;
+          @media (min-width: 640px) {
+            .rbc-toolbar-label {
+              order: 0;
+              margin-bottom: 0;
+            }
           }
-          .rbc-today {
-            background-color: #eef2ff;
+          .rbc-btn-group {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
           }
-          .rbc-event {
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 0.875rem;
-            font-weight: 500;
-          }
-          .rbc-show-more {
-            color: #4F46E5;
-            font-weight: 500;
-          }
-          .rbc-off-range-bg {
-            background-color: #f9fafb;
-          }
-          .rbc-date-cell {
-            color: #111827;
-            font-weight: 500;
-          }
-          .rbc-day-bg + .rbc-day-bg {
-            border-left: 1px solid #e5e7eb;
-          }
-          .rbc-month-view {
+          .rbc-toolbar button {
+            color: #1f2937;
+            border: 1px solid #e5e7eb;
+            padding: 8px;
             border-radius: 8px;
-            border-color: #e5e7eb;
+            background: white;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 40px;
+            height: 40px;
+            transition: all 0.2s;
           }
-          .rbc-toolbar button:focus,
-          input:focus,
-          button:focus {
-            outline: none !important;
-            box-shadow: none !important;
+          .rbc-toolbar button:hover {
+            background-color: #f3f4f6;
+            border-color: #d1d5db;
           }
-          .rbc-toolbar button:active {
-            background-color: #4338ca;
+          .rbc-toolbar button.rbc-active {
+            background-color: #4F46E5;
             color: white;
+            border-color: #4F46E5;
           }
-          input:focus-visible,
-          button:focus-visible {
-            outline: none !important;
-            box-shadow: none !important;
+          .rbc-toolbar button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
           }
         `}</style>
-        <div style={{ height: '700px' }}>
+        <div className="h-[450px] flex flex-col">
           <Calendar
             localizer={localizer}
             events={events}
             startAccessor="start"
             endAccessor="end"
-            style={{ height: '100%' }}
-            eventPropGetter={eventStyleGetter}
             views={['month']}
             defaultView="month"
             popup={false}
@@ -353,6 +434,75 @@ export default function Dashboard() {
               date: "Tarih",
               noEventsInRange: "Bu aralıkta etkinlik yok.",
               showMore: total => `+${total} etkinlik daha`
+            }}
+            components={{
+              toolbar: (toolbarProps) => {
+                return (
+                  <div className="rbc-toolbar">
+                    <span className="rbc-btn-group">
+                      <button
+                        type="button"
+                        onClick={() => toolbarProps.onNavigate('PREV')}
+                        title="Önceki ay"
+                      >
+                        <ChevronLeftIcon className="w-5 h-5" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => toolbarProps.onNavigate('TODAY')}
+                        title="Bugün"
+                      >
+                        <CalendarDaysIcon className="w-5 h-5" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => toolbarProps.onNavigate('NEXT')}
+                        title="Sonraki ay"
+                      >
+                        <ChevronRightIcon className="w-5 h-5" />
+                      </button>
+                    </span>
+                    <span className="rbc-toolbar-label">
+                      {format(toolbarProps.date, 'MMMM yyyy', { locale: tr })}
+                    </span>
+                  </div>
+                );
+              },
+              event: (props) => {
+                let backgroundColor, label;
+                switch (props.event.type) {
+                  case 'birthday':
+                    backgroundColor = '#BE185D';
+                    label = 'D';
+                    break;
+                  case 'meeting':
+                    backgroundColor = '#3730A3';
+                    label = 'T';
+                    break;
+                  case 'deadline':
+                    backgroundColor = '#B91C1C';
+                    label = 'S';
+                    break;
+                  case 'congress':
+                    backgroundColor = '#065F46';
+                    label = 'K';
+                    break;
+                  default:
+                    backgroundColor = '#3730A3';
+                    label = 'E';
+                }
+                return (
+                  <div
+                    className="rbc-event"
+                    style={{
+                      backgroundColor,
+                      opacity: 1
+                    }}
+                  >
+                    {label}
+                  </div>
+                );
+              }
             }}
           />
         </div>

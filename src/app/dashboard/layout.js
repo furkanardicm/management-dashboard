@@ -78,11 +78,11 @@ export default function DashboardLayout({ children }) {
                   </span>
                   <button
                     onClick={logout}
-                    className="group relative inline-flex items-center px-4 py-2 text-sm font-bold overflow-hidden bg-white text-red-700 border-2 border-red-700 rounded-lg transition-all duration-300 hover:border-red-700 hover:shadow-[0_0_20px_rgba(185,28,28,0.2)] active:scale-95"
+                    className="group relative inline-flex items-center px-2 sm:px-4 py-2 text-sm font-bold overflow-hidden bg-white text-red-700 border-2 border-red-700 rounded-lg transition-all duration-300 hover:border-red-700 hover:shadow-[0_0_20px_rgba(185,28,28,0.2)] active:scale-95"
                   >
                     <span className="absolute font-bold inset-0 bg-red-700 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></span>
-                    <ArrowRightOnRectangleIcon className="relative h-5 w-5 mr-2 transition-colors duration-300 group-hover:text-white" />
-                    <span className="relative transition-colors duration-300 group-hover:text-white">Çıkış Yap</span>
+                    <ArrowRightOnRectangleIcon className="relative h-5 w-5 transition-colors duration-300 group-hover:text-white" />
+                    <span className="relative ml-2 transition-colors duration-300 group-hover:text-white hidden sm:inline-block">Çıkış Yap</span>
                   </button>
                 </div>
               </div>
