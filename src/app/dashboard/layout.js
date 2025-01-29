@@ -9,14 +9,22 @@ import { ArrowRightOnRectangleIcon } from '@heroicons/react/24/outline';
 export default function DashboardLayout({ children }) {
   const { user, logout } = useAuth();
   const router = useRouter();
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [isInitialized, setIsInitialized] = useState(false);
 
-  // localStorage'dan sidebar durumunu al
+  // İlk yüklemede sidebar durumunu kontrol et
   useEffect(() => {
     const savedState = localStorage.getItem('sidebarState');
+    const isMobile = window.innerWidth < 768;
+    
+    // Eğer localStorage'da değer varsa onu kullan, yoksa mobil durumuna göre ayarla
     if (savedState !== null) {
       setSidebarOpen(savedState === 'true');
+    } else {
+      setSidebarOpen(!isMobile);
+      localStorage.setItem('sidebarState', (!isMobile).toString());
     }
+    setIsInitialized(true);
   }, []);
 
   // sidebar durumu değiştiğinde güncelle
@@ -33,6 +41,15 @@ export default function DashboardLayout({ children }) {
   if (!user) {
     router.replace('/login');
     return null;
+  }
+
+  // İlk yükleme tamamlanana kadar loading göster
+  if (!isInitialized) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
+      </div>
+    );
   }
 
   return (
