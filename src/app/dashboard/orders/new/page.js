@@ -58,15 +58,17 @@ export default function NewOrder() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-xl font-semibold text-gray-900">Yeni Sipariş</h1>
+      <div className="flex items-center space-x-4">
         <button
           onClick={() => router.back()}
-          className="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 rounded-md border border-gray-300 transition-colors duration-200"
+          className="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 rounded-md border border-gray-300 transition-colors duration-200"
         >
           <ArrowLeftIcon className="h-5 w-5 mr-2" />
           Geri Dön
         </button>
+        <h1 className="text-2xl font-semibold text-gray-900">
+          Yeni Sipariş Oluştur
+        </h1>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6 bg-white p-6 rounded-lg shadow">

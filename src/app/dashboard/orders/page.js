@@ -7,8 +7,11 @@ import {
   PlusCircleIcon, 
   FunnelIcon,
   MagnifyingGlassIcon,
-  ArrowPathIcon
+  ArrowPathIcon,
+  DocumentArrowDownIcon
 } from '@heroicons/react/24/outline';
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
 
 export default function Orders() {
   const router = useRouter();
@@ -53,10 +56,119 @@ export default function Orders() {
   };
 
   const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('tr-TR', {
-      style: 'currency',
-      currency: 'TRY'
+    const formatted = new Intl.NumberFormat('tr-TR', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
     }).format(amount);
+    return `₺ ${formatted}`;
+  };
+
+  const generatePDF = () => {
+    const doc = new jsPDF('p', 'mm', 'a4');
+    
+    // Başlık alanı
+    doc.setFont("helvetica");
+    doc.setFillColor(63, 81, 181);
+    doc.rect(0, 0, 210, 25, 'F');
+    
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(20);
+    doc.text('Siparis Listesi', 15, 15);
+    
+    doc.setFontSize(10);
+    doc.text(`Olusturulma Tarihi: ${new Date().toLocaleDateString('tr-TR')}`, 130, 15);
+
+    // Tablo başlıkları
+    const headers = [
+      [
+        { content: 'Siparis No', styles: { halign: 'center' } },
+        { content: 'Musteri', styles: { halign: 'left' } },
+        { content: 'Tarih', styles: { halign: 'center' } },
+        { content: 'Tutar', styles: { halign: 'center' } },
+        { content: 'Durum', styles: { halign: 'center' } }
+      ]
+    ];
+
+    // Şirket ismi için Türkçe karakter dönüşümü
+    const turkishToEnglish = (text) => {
+      const charMap = {
+        'ş': 's', 'Ş': 'S',
+        'ı': 'i', 'İ': 'I',
+        'ö': 'o', 'Ö': 'O',
+        'ü': 'u', 'Ü': 'U',
+        'ç': 'c', 'Ç': 'C',
+        'ğ': 'g', 'Ğ': 'G'
+      };
+      return text.replace(/[şŞıİöÖüÜçÇğĞ]/g, match => charMap[match] || match);
+    };
+
+    // Tablo verileri
+    const data = orders.map(order => [
+      { content: `#${order.id}`, styles: { halign: 'center' } },
+      { content: turkishToEnglish(order.customerName), styles: { halign: 'left' } },
+      { content: formatDate(order.date), styles: { halign: 'center' } },
+      { content: formatCurrency(order.amount), styles: { halign: 'center' } },
+      { 
+        content: order.status === 'pending' ? 'Bekliyor' : 
+                 order.status === 'approved' ? 'Onaylandi' : 
+                 order.status === 'rejected' ? 'Reddedildi' : 'Bilinmiyor',
+        styles: { 
+          halign: 'center',
+          fillColor: order.status === 'pending' ? [255, 236, 153] : 
+                    order.status === 'approved' ? [198, 246, 213] : 
+                    order.status === 'rejected' ? [254, 202, 202] : [229, 231, 235],
+          textColor: order.status === 'pending' ? [146, 64, 14] : 
+                    order.status === 'approved' ? [21, 128, 61] : 
+                    order.status === 'rejected' ? [185, 28, 28] : [55, 65, 81]
+        }
+      }
+    ]);
+
+    // Tablo oluştur
+    doc.autoTable({
+      head: headers,
+      body: data,
+      startY: 35,
+      theme: 'grid',
+      styles: {
+        font: 'helvetica',
+        fontSize: 8,
+        cellPadding: 3,
+        lineColor: [233, 236, 239],
+        lineWidth: 0.1,
+      },
+      headStyles: {
+        fillColor: [243, 244, 246],
+        textColor: [55, 65, 81],
+        fontStyle: 'bold',
+        lineColor: [209, 213, 219],
+        lineWidth: 0.2,
+      },
+      columnStyles: {
+        0: { cellWidth: 20 },
+        1: { cellWidth: 45 },
+        2: { cellWidth: 25 },
+        3: { cellWidth: 35 },
+        4: { cellWidth: 25 }
+      },
+      alternateRowStyles: {
+        fillColor: [249, 250, 251]
+      },
+      margin: { top: 35, left: 10, right: 10 },
+      didDrawPage: function(data) {
+        // Sayfa numarası
+        doc.setFontSize(8);
+        doc.setTextColor(156, 163, 175);
+        doc.text(
+          `Sayfa ${data.pageNumber}`,
+          data.settings.margin.left,
+          doc.internal.pageSize.height - 10
+        );
+      }
+    });
+
+    // PDF'i indir
+    doc.save(`siparisler_${new Date().toLocaleDateString('tr-TR').replace(/\./g, '_')}.pdf`);
   };
 
   if (loading) return <div>Yükleniyor...</div>;
@@ -65,13 +177,22 @@ export default function Orders() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold text-gray-900">Siparişler</h1>
-        <button
-          onClick={() => router.push('/dashboard/orders/new')}
-          className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 transition-colors duration-200"
-        >
-          <PlusCircleIcon className="h-5 w-5 mr-2" />
-          Yeni Sipariş
-        </button>
+        <div className="flex items-center space-x-2">
+          <button
+            onClick={generatePDF}
+            className="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 rounded-md border border-gray-300 transition-colors duration-200"
+          >
+            <DocumentArrowDownIcon className="h-5 w-5 mr-2" />
+            PDF İndir
+          </button>
+          <button
+            onClick={() => router.push('/dashboard/orders/new')}
+            className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-md transition-colors duration-200"
+          >
+            <PlusCircleIcon className="h-5 w-5 mr-2" />
+            Yeni Sipariş
+          </button>
+        </div>
       </div>
 
       {/* Filtreler */}

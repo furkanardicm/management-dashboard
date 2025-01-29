@@ -64,7 +64,7 @@ export default function OrdersReport() {
               type="date"
               value={dateRange.startDate}
               onChange={(e) => setDateRange({ ...dateRange, startDate: e.target.value })}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm text-gray-900 sm:text-sm"
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm text-gray-900 sm:text-sm p-3"
             />
           </div>
           <div>
