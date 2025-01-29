@@ -202,69 +202,6 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Etkinlik Listesi */}
-      <div className="bg-white p-6 rounded-lg shadow">
-        <h3 className="text-lg font-medium text-gray-900 mb-4">Bu Aydaki Etkinlikler</h3>
-        <div className="space-y-2.5">
-          {events.length === 0 ? (
-            <p className="text-gray-500 text-sm">Bu ay için planlanmış etkinlik bulunmuyor.</p>
-          ) : (
-            events.map((event) => {
-              let bgColor, textColor, dotColor;
-              switch (event.type) {
-                case 'birthday':
-                  bgColor = 'bg-pink-50';
-                  textColor = 'text-pink-700';
-                  dotColor = 'bg-pink-700';
-                  break;
-                case 'meeting':
-                  bgColor = 'bg-indigo-50';
-                  textColor = 'text-indigo-700';
-                  dotColor = 'bg-indigo-700';
-                  break;
-                case 'deadline':
-                  bgColor = 'bg-red-50';
-                  textColor = 'text-red-700';
-                  dotColor = 'bg-red-700';
-                  break;
-                case 'congress':
-                  bgColor = 'bg-emerald-50';
-                  textColor = 'text-emerald-700';
-                  dotColor = 'bg-emerald-700';
-                  break;
-                default:
-                  bgColor = 'bg-gray-50';
-                  textColor = 'text-gray-700';
-                  dotColor = 'bg-gray-700';
-              }
-
-              return (
-                <div key={event.id} className={`flex items-center justify-between p-2.5 rounded-lg ${bgColor} hover:bg-opacity-80 transition-colors duration-200`}>
-                  <div className="flex items-center min-w-0 flex-1">
-                    <div className={`w-2 h-2 rounded-full ${dotColor} opacity-80 flex-shrink-0`}></div>
-                    <div className="ml-2.5 truncate">
-                      <h4 className={`font-medium ${textColor} text-sm truncate`}>{event.title}</h4>
-                      <p className="text-xs text-gray-600">
-                        {format(event.start, 'dd MMMM yyyy', { locale: tr })}
-                        {event.start.getHours() !== 0 && (
-                          <span> • {format(event.start, 'HH:mm', { locale: tr })}</span>
-                        )}
-                      </p>
-                    </div>
-                  </div>
-                  <div className={`ml-3 px-2 py-0.5 rounded-full text-xs font-medium ${bgColor} ${textColor} flex-shrink-0`}>
-                    {event.type === 'birthday' && 'Doğum Günü'}
-                    {event.type === 'meeting' && 'Toplantı'}
-                    {event.type === 'deadline' && 'Son Tarih'}
-                    {event.type === 'congress' && 'Kongre'}
-                  </div>
-                </div>
-              );
-            })
-          )}
-        </div>
-      </div>
-
       {/* Takvim */}
       <div className="bg-white p-6 rounded-lg shadow">
         <style jsx global>{`
@@ -505,6 +442,69 @@ export default function Dashboard() {
               }
             }}
           />
+        </div>
+      </div>
+
+      {/* Etkinlik Listesi */}
+      <div className="bg-white p-6 rounded-lg shadow">
+        <h3 className="text-lg font-medium text-gray-900 mb-4">Bu Aydaki Etkinlikler</h3>
+        <div className="space-y-2.5">
+          {events.length === 0 ? (
+            <p className="text-gray-500 text-sm">Bu ay için planlanmış etkinlik bulunmuyor.</p>
+          ) : (
+            events.map((event) => {
+              let bgColor, textColor, dotColor;
+              switch (event.type) {
+                case 'birthday':
+                  bgColor = 'bg-pink-50';
+                  textColor = 'text-pink-700';
+                  dotColor = 'bg-pink-700';
+                  break;
+                case 'meeting':
+                  bgColor = 'bg-indigo-50';
+                  textColor = 'text-indigo-700';
+                  dotColor = 'bg-indigo-700';
+                  break;
+                case 'deadline':
+                  bgColor = 'bg-red-50';
+                  textColor = 'text-red-700';
+                  dotColor = 'bg-red-700';
+                  break;
+                case 'congress':
+                  bgColor = 'bg-emerald-50';
+                  textColor = 'text-emerald-700';
+                  dotColor = 'bg-emerald-700';
+                  break;
+                default:
+                  bgColor = 'bg-gray-50';
+                  textColor = 'text-gray-700';
+                  dotColor = 'bg-gray-700';
+              }
+
+              return (
+                <div key={event.id} className={`flex items-center justify-between p-2.5 rounded-lg ${bgColor} hover:bg-opacity-80 transition-colors duration-200`}>
+                  <div className="flex items-center min-w-0 flex-1">
+                    <div className={`w-2 h-2 rounded-full ${dotColor} opacity-80 flex-shrink-0`}></div>
+                    <div className="ml-2.5 truncate">
+                      <h4 className={`font-medium ${textColor} text-sm truncate`}>{event.title}</h4>
+                      <p className="text-xs text-gray-600">
+                        {format(event.start, 'dd MMMM yyyy', { locale: tr })}
+                        {event.start.getHours() !== 0 && (
+                          <span> • {format(event.start, 'HH:mm', { locale: tr })}</span>
+                        )}
+                      </p>
+                    </div>
+                  </div>
+                  <div className={`ml-3 px-2 py-0.5 rounded-full text-xs font-medium ${bgColor} ${textColor} flex-shrink-0`}>
+                    {event.type === 'birthday' && 'Doğum Günü'}
+                    {event.type === 'meeting' && 'Toplantı'}
+                    {event.type === 'deadline' && 'Son Tarih'}
+                    {event.type === 'congress' && 'Kongre'}
+                  </div>
+                </div>
+              );
+            })
+          )}
         </div>
       </div>
     </div>
