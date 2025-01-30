@@ -185,7 +185,7 @@ export default function Login() {
       {/* Footer */}
       <div className="absolute bottom-4 text-center">
         <p className="text-xs text-gray-500">
-          v1.0 - Son Güncelleme: 17.02.2023
+          v1.0 - Son Güncelleme: 30.01.2025
         </p>
       </div>
     </div>

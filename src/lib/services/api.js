@@ -1,3 +1,5 @@
+'use client';
+
 // Fake API delay
 const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
@@ -406,5 +408,518 @@ export const calendarApi = {
       const eventYear = event.start.getFullYear();
       return eventMonth === targetMonth && eventYear === targetYear;
     });
+  }
+};
+
+// Sağlık Kurumları
+let healthInstitutions = [
+  { 
+    id: 1, 
+    name: 'Özel Medica Hastanesi',
+    type: 'Özel Hastane',
+    department: 'Radyoloji, Kardiyoloji',
+    bedCount: '250',
+    contact: 'Prof. Dr. Ahmet Yılmaz',
+    title: 'Başhekim',
+    phone: '555-0101',
+    email: 'ahmet.yilmaz@medicahastanesi.com',
+    status: 'active'
+  },
+  { 
+    id: 2, 
+    name: 'Şifa Tıp Merkezi',
+    type: 'Tıp Merkezi',
+    department: 'Dahiliye, Göz, KBB',
+    bedCount: '50',
+    contact: 'Dr. Ayşe Demir',
+    title: 'Merkez Müdürü',
+    phone: '555-0102',
+    email: 'ayse.demir@sifatip.com',
+    status: 'active'
+  },
+  {
+    id: 3,
+    name: 'Devlet Eğitim ve Araştırma Hastanesi',
+    type: 'Kamu Hastanesi',
+    department: 'Tüm Branşlar',
+    bedCount: '750',
+    contact: 'Doç. Dr. Mehmet Kaya',
+    title: 'Başhekim Yardımcısı',
+    phone: '555-0103',
+    email: 'mehmet.kaya@saglik.gov.tr',
+    status: 'active'
+  }
+];
+
+// Ziyaretler
+let visits = [
+  { 
+    id: 1, 
+    institution: 'Özel Medica Hastanesi',
+    department: 'Radyoloji',
+    contactPerson: 'Prof. Dr. Ahmet Yılmaz',
+    visitDate: '2024-04-15',
+    visitTime: '14:30',
+    visitType: 'Ürün Tanıtımı',
+    salesPerson: 'Mehmet Aydın',
+    notes: 'PACS sistemi için demo talebi alındı',
+    result: 'Olumlu',
+    nextVisit: '2024-04-30',
+    status: 'completed'
+  },
+  { 
+    id: 2, 
+    institution: 'Şifa Tıp Merkezi',
+    department: 'Yönetim',
+    contactPerson: 'Dr. Ayşe Demir',
+    visitDate: '2024-04-20',
+    visitTime: '10:00',
+    visitType: 'Satış Görüşmesi',
+    salesPerson: 'Ayşe Yılmaz',
+    notes: 'Hastane bilgi sistemi için fiyat görüşmesi yapıldı',
+    result: 'Beklemede',
+    nextVisit: '2024-05-05',
+    status: 'planned'
+  }
+];
+
+// Sağlık Kurumları API
+const healthApi = {
+  getInstitutions: async () => {
+    return Promise.resolve(healthInstitutions);
+  },
+
+  getInstitutionById: async (id) => {
+    const institution = healthInstitutions.find(i => i.id === parseInt(id));
+    if (!institution) throw new Error('Kurum bulunamadı');
+    return Promise.resolve(institution);
+  },
+
+  createInstitution: async (data) => {
+    const newInstitution = {
+      id: healthInstitutions.length + 1,
+      ...data,
+      status: 'active'
+    };
+    healthInstitutions.push(newInstitution);
+    return Promise.resolve(newInstitution);
+  },
+
+  updateInstitution: async (id, data) => {
+    const index = healthInstitutions.findIndex(i => i.id === parseInt(id));
+    if (index === -1) throw new Error('Kurum bulunamadı');
+    healthInstitutions[index] = { ...healthInstitutions[index], ...data };
+    return Promise.resolve(healthInstitutions[index]);
+  },
+
+  deleteInstitution: async (id) => {
+    const index = healthInstitutions.findIndex(i => i.id === parseInt(id));
+    if (index === -1) throw new Error('Kurum bulunamadı');
+    healthInstitutions.splice(index, 1);
+    return Promise.resolve(true);
+  }
+};
+
+// Ziyaret API
+const visitApi = {
+  getVisits: async () => {
+    return Promise.resolve(visits);
+  },
+
+  getVisitById: async (id) => {
+    const visit = visits.find(v => v.id === parseInt(id));
+    if (!visit) throw new Error('Ziyaret bulunamadı');
+    return Promise.resolve(visit);
+  },
+
+  createVisit: async (data) => {
+    const newVisit = {
+      id: visits.length + 1,
+      ...data
+    };
+    visits.push(newVisit);
+    return Promise.resolve(newVisit);
+  },
+
+  updateVisit: async (id, data) => {
+    const index = visits.findIndex(v => v.id === parseInt(id));
+    if (index === -1) throw new Error('Ziyaret bulunamadı');
+    visits[index] = { ...visits[index], ...data };
+    return Promise.resolve(visits[index]);
+  },
+
+  deleteVisit: async (id) => {
+    const index = visits.findIndex(v => v.id === parseInt(id));
+    if (index === -1) throw new Error('Ziyaret bulunamadı');
+    visits.splice(index, 1);
+    return Promise.resolve(true);
+  }
+};
+
+export { healthApi, visitApi };
+
+const tenders = [
+  {
+    id: 1,
+    name: "MR Cihazı Alımı",
+    institution: "Özel Medica Hastanesi",
+    type: "Donanım İhalesi",
+    budget: "2.500.000 TL",
+    deadline: "2024-04-15",
+    competitors: "ABC Medical, XYZ Healthcare, MediTech",
+    ourBid: "2.350.000 TL",
+    status: "active"
+  },
+  {
+    id: 2,
+    name: "Laboratuvar Sistemleri",
+    institution: "Şifa Tıp Merkezi",
+    type: "Yazılım İhalesi",
+    budget: "750.000 TL",
+    deadline: "2024-03-30",
+    competitors: "LabSoft, MediLab Systems",
+    ourBid: "720.000 TL",
+    status: "pending"
+  },
+  {
+    id: 3,
+    name: "Hasta Takip Sistemi",
+    institution: "Devlet Hastanesi",
+    type: "Yazılım + Donanım",
+    budget: "1.200.000 TL",
+    deadline: "2024-05-01",
+    competitors: "Healthcare IT, MediSoft, TechMed",
+    ourBid: "1.150.000 TL",
+    status: "passive"
+  }
+];
+
+export const tenderApi = {
+  getTenders: async () => {
+    await delay(500);
+    return tenders;
+  },
+
+  createTender: async (tender) => {
+    await delay(500);
+    const newTender = {
+      id: tenders.length + 1,
+      ...tender
+    };
+    tenders.push(newTender);
+    return newTender;
+  },
+
+  updateTender: async (id, tender) => {
+    await delay(500);
+    const index = tenders.findIndex(t => t.id === id);
+    if (index === -1) throw new Error('İhale bulunamadı');
+    tenders[index] = { ...tenders[index], ...tender };
+    return tenders[index];
+  },
+
+  deleteTender: async (id) => {
+    await delay(500);
+    const index = tenders.findIndex(t => t.id === id);
+    if (index === -1) throw new Error('İhale bulunamadı');
+    tenders.splice(index, 1);
+    return true;
+  }
+};
+
+// Rakip Firmalar
+let competitors = [
+  {
+    id: 1,
+    name: "ABC Medical",
+    type: "Medikal Cihaz",
+    products: "MR, Tomografi, Ultrason",
+    strengths: "Güçlü servis ağı, Geniş ürün yelpazesi",
+    weaknesses: "Yüksek fiyat politikası",
+    marketShare: "%25",
+    contactPerson: "Ahmet Yılmaz",
+    phone: "555-0101",
+    email: "ahmet@abcmedical.com",
+    status: "active"
+  },
+  {
+    id: 2,
+    name: "LabSoft Systems",
+    type: "Yazılım",
+    products: "HIS, LIS, PACS",
+    strengths: "Yenilikçi çözümler, Hızlı destek",
+    weaknesses: "Sınırlı müşteri portföyü",
+    marketShare: "%15",
+    contactPerson: "Ayşe Demir",
+    phone: "555-0102",
+    email: "ayse@labsoft.com",
+    status: "active"
+  },
+  {
+    id: 3,
+    name: "MediTech",
+    type: "Medikal Cihaz + Yazılım",
+    products: "Hasta Takip Sistemleri, Monitörler",
+    strengths: "Entegre çözümler",
+    weaknesses: "Yavaş teknik destek",
+    marketShare: "%20",
+    contactPerson: "Mehmet Kaya",
+    phone: "555-0103",
+    email: "mehmet@meditech.com",
+    status: "passive"
+  }
+];
+
+// Rakip Firma API
+export const competitorApi = {
+  getCompetitors: async () => {
+    await delay(500);
+    return competitors;
+  },
+
+  getCompetitorById: async (id) => {
+    await delay(500);
+    const competitor = competitors.find(c => c.id === parseInt(id));
+    if (!competitor) throw new Error('Rakip firma bulunamadı');
+    return competitor;
+  },
+
+  createCompetitor: async (competitor) => {
+    await delay(500);
+    const newCompetitor = {
+      id: competitors.length + 1,
+      ...competitor
+    };
+    competitors.push(newCompetitor);
+    return newCompetitor;
+  },
+
+  updateCompetitor: async (id, competitor) => {
+    await delay(500);
+    const index = competitors.findIndex(c => c.id === parseInt(id));
+    if (index === -1) throw new Error('Rakip firma bulunamadı');
+    competitors[index] = { ...competitors[index], ...competitor };
+    return competitors[index];
+  },
+
+  deleteCompetitor: async (id) => {
+    await delay(500);
+    const index = competitors.findIndex(c => c.id === parseInt(id));
+    if (index === -1) throw new Error('Rakip firma bulunamadı');
+    competitors.splice(index, 1);
+    return true;
+  }
+};
+
+// Kamu Müşterileri
+let publicInstitutions = [
+  {
+    id: 1,
+    name: "Ankara Şehir Hastanesi",
+    type: "Şehir Hastanesi",
+    city: "Ankara",
+    district: "Bilkent",
+    bedCount: "3810",
+    departments: "Tüm Branşlar",
+    budget: "Merkezi Bütçe",
+    procurementMethod: "DMO + İhale",
+    contactPerson: "Prof. Dr. Mehmet Yılmaz",
+    title: "Başhekim",
+    phone: "312-555-0101",
+    email: "mehmet.yilmaz@saglik.gov.tr",
+    lastVisitDate: "2024-03-15",
+    nextVisitDate: "2024-04-15",
+    notes: "Yeni PACS sistemi ihtiyacı var",
+    status: "active"
+  },
+  {
+    id: 2,
+    name: "İzmir Atatürk Eğitim ve Araştırma Hastanesi",
+    type: "Eğitim Araştırma Hastanesi",
+    city: "İzmir",
+    district: "Karabağlar",
+    bedCount: "1200",
+    departments: "Tüm Branşlar",
+    budget: "Döner Sermaye",
+    procurementMethod: "İhale",
+    contactPerson: "Doç. Dr. Ayşe Demir",
+    title: "Başhekim Yardımcısı",
+    phone: "232-555-0102",
+    email: "ayse.demir@saglik.gov.tr",
+    lastVisitDate: "2024-03-01",
+    nextVisitDate: "2024-04-01",
+    notes: "HIS yenileme planı var",
+    status: "active"
+  },
+  {
+    id: 3,
+    name: "İstanbul Eğitim ve Araştırma Hastanesi",
+    type: "Eğitim Araştırma Hastanesi",
+    city: "İstanbul",
+    district: "Fatih",
+    bedCount: "750",
+    departments: "Tüm Branşlar",
+    budget: "Döner Sermaye",
+    procurementMethod: "DMO",
+    contactPerson: "Dr. Ali Kaya",
+    title: "Başhekim",
+    phone: "212-555-0103",
+    email: "ali.kaya@saglik.gov.tr",
+    lastVisitDate: "2024-02-15",
+    nextVisitDate: "2024-04-15",
+    notes: "Radyoloji cihazları yenileme ihtiyacı",
+    status: "passive"
+  }
+];
+
+// Kamu Müşterileri API
+export const publicApi = {
+  getInstitutions: async () => {
+    await delay(500);
+    return publicInstitutions;
+  },
+
+  getInstitutionById: async (id) => {
+    await delay(500);
+    const institution = publicInstitutions.find(i => i.id === parseInt(id));
+    if (!institution) throw new Error('Kurum bulunamadı');
+    return institution;
+  },
+
+  createInstitution: async (institution) => {
+    await delay(500);
+    const newInstitution = {
+      id: publicInstitutions.length + 1,
+      ...institution
+    };
+    publicInstitutions.push(newInstitution);
+    return newInstitution;
+  },
+
+  updateInstitution: async (id, institution) => {
+    await delay(500);
+    const index = publicInstitutions.findIndex(i => i.id === parseInt(id));
+    if (index === -1) throw new Error('Kurum bulunamadı');
+    publicInstitutions[index] = { ...publicInstitutions[index], ...institution };
+    return publicInstitutions[index];
+  },
+
+  deleteInstitution: async (id) => {
+    await delay(500);
+    const index = publicInstitutions.findIndex(i => i.id === parseInt(id));
+    if (index === -1) throw new Error('Kurum bulunamadı');
+    publicInstitutions.splice(index, 1);
+    return true;
+  }
+};
+
+// Tıp Müşterileri
+let medicalCustomers = [
+  {
+    id: 1,
+    name: "Özel Medica Hastanesi",
+    type: "Özel Hastane",
+    city: "İstanbul",
+    district: "Kadıköy",
+    bedCount: "250",
+    departments: "Radyoloji, Kardiyoloji, Nöroloji",
+    annualPatientCount: "50000",
+    equipmentBudget: "5000000",
+    contactPerson: "Prof. Dr. Ahmet Yılmaz",
+    title: "Başhekim",
+    phone: "216-555-0101",
+    email: "ahmet.yilmaz@medicahastanesi.com",
+    purchasingManager: "Mehmet Demir",
+    purchasingManagerPhone: "216-555-0102",
+    purchasingManagerEmail: "mehmet.demir@medicahastanesi.com",
+    lastVisitDate: "2024-03-15",
+    nextVisitDate: "2024-04-15",
+    notes: "Yeni görüntüleme merkezi açılışı planlanıyor",
+    status: "active"
+  },
+  {
+    id: 2,
+    name: "Şifa Tıp Merkezi",
+    type: "Tıp Merkezi",
+    city: "Ankara",
+    district: "Çankaya",
+    bedCount: "50",
+    departments: "Dahiliye, Göz, KBB",
+    annualPatientCount: "25000",
+    equipmentBudget: "2000000",
+    contactPerson: "Dr. Ayşe Demir",
+    title: "Merkez Müdürü",
+    phone: "312-555-0102",
+    email: "ayse.demir@sifatip.com",
+    purchasingManager: "Ali Yılmaz",
+    purchasingManagerPhone: "312-555-0103",
+    purchasingManagerEmail: "ali.yilmaz@sifatip.com",
+    lastVisitDate: "2024-03-01",
+    nextVisitDate: "2024-04-01",
+    notes: "Yeni şube açılışı planlanıyor",
+    status: "active"
+  },
+  {
+    id: 3,
+    name: "Anadolu Sağlık Merkezi",
+    type: "Özel Hastane",
+    city: "İzmir",
+    district: "Karşıyaka",
+    bedCount: "150",
+    departments: "Genel Cerrahi, Ortopedi, Üroloji",
+    annualPatientCount: "35000",
+    equipmentBudget: "3000000",
+    contactPerson: "Dr. Mehmet Kaya",
+    title: "Başhekim Yardımcısı",
+    phone: "232-555-0103",
+    email: "mehmet.kaya@anadolusaglik.com",
+    purchasingManager: "Fatma Şahin",
+    purchasingManagerPhone: "232-555-0104",
+    purchasingManagerEmail: "fatma.sahin@anadolusaglik.com",
+    lastVisitDate: "2024-02-15",
+    nextVisitDate: "2024-04-15",
+    notes: "Ameliyathane yenileme projesi var",
+    status: "passive"
+  }
+];
+
+// Tıp Müşterileri API
+export const medicalApi = {
+  getCustomers: async () => {
+    await delay(500);
+    return medicalCustomers;
+  },
+
+  getCustomerById: async (id) => {
+    await delay(500);
+    const customer = medicalCustomers.find(c => c.id === parseInt(id));
+    if (!customer) throw new Error('Müşteri bulunamadı');
+    return customer;
+  },
+
+  createCustomer: async (customer) => {
+    await delay(500);
+    const newCustomer = {
+      id: medicalCustomers.length + 1,
+      ...customer
+    };
+    medicalCustomers.push(newCustomer);
+    return newCustomer;
+  },
+
+  updateCustomer: async (id, customer) => {
+    await delay(500);
+    const index = medicalCustomers.findIndex(c => c.id === parseInt(id));
+    if (index === -1) throw new Error('Müşteri bulunamadı');
+    medicalCustomers[index] = { ...medicalCustomers[index], ...customer };
+    return medicalCustomers[index];
+  },
+
+  deleteCustomer: async (id) => {
+    await delay(500);
+    const index = medicalCustomers.findIndex(c => c.id === parseInt(id));
+    if (index === -1) throw new Error('Müşteri bulunamadı');
+    medicalCustomers.splice(index, 1);
+    return true;
   }
 }; 

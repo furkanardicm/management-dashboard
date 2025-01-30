@@ -10,9 +10,10 @@ import startOfWeek from 'date-fns/startOfWeek';
 import getDay from 'date-fns/getDay';
 import tr from 'date-fns/locale/tr';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
-import { CalendarIcon, UserGroupIcon, BuildingOfficeIcon, DocumentTextIcon } from '@heroicons/react/24/outline';
+import { CalendarIcon, UserGroupIcon, BuildingOfficeIcon, DocumentTextIcon, CurrencyDollarIcon } from '@heroicons/react/24/outline';
 import { ChevronLeftIcon, ChevronRightIcon, CalendarDaysIcon } from '@heroicons/react/24/solid';
 import { calendarApi } from '@/lib/services/api';
+import StatCard from '@/components/StatCard';
 
 const locales = {
   'tr': tr,
@@ -149,31 +150,68 @@ export default function Dashboard() {
         {user.role === 'PROJECT_MANAGER' ? 'Proje Yönetimi' : 'Muhasebe Yönetimi'}
       </h2>
 
-      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+      {/* İstatistik Kartları */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {user.role === 'PROJECT_MANAGER' ? (
           <>
-            <StatCard title="Toplam Kullanıcı" value={stats.totalUsers} />
-            <StatCard title="Aktif Projeler" value={stats.activeProjects} />
-            <StatCard title="Sponsor Firmalar" value={stats.totalSponsors} />
-            <StatCard title="Bekleyen Siparişler" value={stats.pendingOrders} />
+            <StatCard
+              title="Toplam Kullanıcı"
+              value={stats?.totalUsers || 0}
+              description="Sistemde kayıtlı tüm kullanıcılar"
+              icon={UserGroupIcon}
+              color="blue"
+            />
+            <StatCard
+              title="Aktif Projeler"
+              value={stats?.activeProjects || 0}
+              description="Devam eden proje sayısı"
+              icon={DocumentTextIcon}
+              color="green"
+            />
+            <StatCard
+              title="Sponsor Firmalar"
+              value={stats?.totalSponsors || 0}
+              description="Toplam sponsor firma sayısı"
+              icon={BuildingOfficeIcon}
+              color="purple"
+            />
+            <StatCard
+              title="Bekleyen Siparişler"
+              value={stats?.pendingOrders || 0}
+              description="İşlem bekleyen sipariş sayısı"
+              icon={CalendarIcon}
+              color="yellow"
+            />
           </>
         ) : (
           <>
-            <StatCard 
-              title="Toplam Giderler" 
-              value={`₺${stats.totalExpenses.toLocaleString()}`} 
+            <StatCard
+              title="Toplam Gider"
+              value={`₺${stats?.totalExpenses?.toLocaleString() || 0}`}
+              description="Toplam gider tutarı"
+              icon={CurrencyDollarIcon}
+              color="red"
             />
-            <StatCard 
-              title="Bekleyen Ödemeler" 
-              value={stats.pendingPayments} 
+            <StatCard
+              title="Bekleyen Ödemeler"
+              value={stats?.pendingPayments || 0}
+              description="Bekleyen ödeme sayısı"
+              icon={DocumentTextIcon}
+              color="yellow"
             />
-            <StatCard 
-              title="Aylık Gelir" 
-              value={`₺${stats.monthlyRevenue.toLocaleString()}`} 
+            <StatCard
+              title="Aylık Gelir"
+              value={`₺${stats?.monthlyRevenue?.toLocaleString() || 0}`}
+              description="Bu ayki toplam gelir"
+              icon={CurrencyDollarIcon}
+              color="green"
             />
-            <StatCard 
-              title="Toplam Müşteri" 
-              value={stats.totalCustomers} 
+            <StatCard
+              title="Toplam Müşteri"
+              value={stats?.totalCustomers || 0}
+              description="Kayıtlı müşteri sayısı"
+              icon={UserGroupIcon}
+              color="blue"
             />
           </>
         )}
@@ -505,25 +543,6 @@ export default function Dashboard() {
               );
             })
           )}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function StatCard({ title, value }) {
-  return (
-    <div className="bg-white overflow-hidden shadow rounded-lg">
-      <div className="p-5">
-        <div className="flex items-center">
-          <div className="flex-1">
-            <dt className="text-sm font-medium text-gray-500 truncate">
-              {title}
-            </dt>
-            <dd className="mt-1 text-3xl font-semibold text-gray-900">
-              {value}
-            </dd>
-          </div>
         </div>
       </div>
     </div>

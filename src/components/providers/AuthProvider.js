@@ -45,7 +45,7 @@ export function AuthProvider({ children }) {
         }
       };
 
-      await new Promise(resolve => setTimeout(resolve, 1000)); // Simüle edilmiş gecikme
+      await new Promise(resolve => setTimeout(resolve, 1000));
 
       const user = testUsers[username];
       if (user && password === '123456') {

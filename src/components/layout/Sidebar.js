@@ -37,6 +37,13 @@ const PROJECT_MANAGER_MENU = {
       ]
     },
     { name: 'Sponsor Firmalar', path: '/dashboard/sponsors', icon: BuildingOfficeIcon },
+  ],
+  'Satış Pazarlama': [
+    { name: 'Tip Müşteri Yönetimi', path: '/dashboard/tip-musteri', icon: UserGroupIcon },
+    { name: 'Kamu Müşteri Yönetimi', path: '/dashboard/kamu-musteri', icon: BuildingOfficeIcon },
+    { name: 'Rakip Firma Takibi', path: '/dashboard/rakip-firma', icon: ChartBarIcon },
+    { name: 'İhale / Teklif Yönetimi', path: '/dashboard/ihale-teklif', icon: DocumentTextIcon },
+    { name: 'Ziyaret Yönetimi', path: '/dashboard/ziyaret', icon: ClipboardDocumentListIcon },
   ]
 };
 
