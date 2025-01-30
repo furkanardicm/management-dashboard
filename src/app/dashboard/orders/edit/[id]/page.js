@@ -1,12 +1,13 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { ordersApi } from '@/lib/services/api';
 import { XMarkIcon, CheckIcon, TrashIcon, PlusIcon, DocumentTextIcon } from '@heroicons/react/24/outline';
 
-export default function YeniSiparis() {
+export default function SiparisDetay({ params }) {
   const router = useRouter();
+  const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [formData, setFormData] = useState({
     customerName: '',
@@ -19,6 +20,22 @@ export default function YeniSiparis() {
     status: 'pending',
     items: []
   });
+
+  useEffect(() => {
+    const loadOrder = async () => {
+      try {
+        const order = await ordersApi.getOrder(params.id);
+        setFormData(order);
+      } catch (error) {
+        console.error('Sipariş yüklenirken hata:', error);
+        alert('Sipariş yüklenirken bir hata oluştu');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadOrder();
+  }, [params.id]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -78,22 +95,33 @@ export default function YeniSiparis() {
     setSaving(true);
 
     try {
-      await ordersApi.createOrder(formData);
+      await ordersApi.updateOrder(params.id, formData);
       router.push('/dashboard/orders');
     } catch (error) {
-      console.error('Sipariş eklenirken hata oluştu:', error);
-      alert('Sipariş eklenirken bir hata oluştu');
+      console.error('Sipariş güncellenirken hata oluştu:', error);
+      alert('Sipariş güncellenirken bir hata oluştu');
     } finally {
       setSaving(false);
     }
   };
 
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Sipariş yükleniyor...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="max-w-7xl mx-auto py-6 space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-semibold text-gray-900">Yeni Sipariş</h1>
-          <p className="mt-2 text-sm text-gray-600">Yeni bir sipariş oluşturmak için formu doldurun.</p>
+          <h1 className="text-2xl font-semibold text-gray-900">Sipariş Düzenle</h1>
+          <p className="mt-2 text-sm text-gray-600">Sipariş bilgilerini güncellemek için formu kullanın.</p>
         </div>
       </div>
 
@@ -186,6 +214,24 @@ export default function YeniSiparis() {
                   onChange={handleChange}
                   className="mt-2 block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
                 />
+              </div>
+
+              <div>
+                <label htmlFor="status" className="block text-sm font-medium leading-6 text-gray-900">
+                  Durum
+                </label>
+                <select
+                  name="status"
+                  id="status"
+                  required
+                  value={formData.status}
+                  onChange={handleChange}
+                  className="mt-2 block w-full rounded-md border border-gray-300 py-2.5 text-gray-900 shadow-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500 sm:text-sm sm:leading-6"
+                >
+                  <option value="pending">Bekliyor</option>
+                  <option value="approved">Onaylandı</option>
+                  <option value="rejected">Reddedildi</option>
+                </select>
               </div>
             </div>
           </div>

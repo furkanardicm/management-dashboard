@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { visitApi, healthApi } from '@/lib/services/api';
+import { XMarkIcon, CheckIcon } from '@heroicons/react/24/outline';
 
 export default function YeniZiyaret() {
   const router = useRouter();
@@ -89,7 +90,7 @@ export default function YeniZiyaret() {
                 required
                 value={formData.institution}
                 onChange={handleChange}
-                className="mt-1 block w-full rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm py-2 px-3"
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm text-gray-900 placeholder-gray-600"
               >
                 <option value="">Seçiniz</option>
                 {institutions.map((institution) => (
@@ -111,7 +112,7 @@ export default function YeniZiyaret() {
                 required
                 value={formData.department}
                 onChange={handleChange}
-                className="mt-1 block w-full rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm py-2 px-3"
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm text-gray-900 placeholder-gray-600"
               />
             </div>
 
@@ -126,7 +127,7 @@ export default function YeniZiyaret() {
                 required
                 value={formData.contactPerson}
                 onChange={handleChange}
-                className="mt-1 block w-full rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm py-2 px-3"
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm text-gray-900 placeholder-gray-600"
               />
             </div>
 
@@ -141,7 +142,7 @@ export default function YeniZiyaret() {
                 required
                 value={formData.visitDate}
                 onChange={handleChange}
-                className="mt-1 block w-full rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm py-2 px-3"
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm text-gray-900 placeholder-gray-600"
               />
             </div>
 
@@ -156,7 +157,7 @@ export default function YeniZiyaret() {
                 required
                 value={formData.visitTime}
                 onChange={handleChange}
-                className="mt-1 block w-full rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm py-2 px-3"
+                className="mt-1 block w-full rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm text-gray-900 placeholder-gray-600 py-2.5 px-3"
               />
             </div>
 
@@ -170,7 +171,7 @@ export default function YeniZiyaret() {
                 required
                 value={formData.visitType}
                 onChange={handleChange}
-                className="mt-1 block w-full rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm py-2 px-3"
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm text-gray-900 placeholder-gray-600"
               >
                 <option value="">Seçiniz</option>
                 <option value="Ürün Tanıtımı">Ürün Tanıtımı</option>
@@ -191,7 +192,7 @@ export default function YeniZiyaret() {
                 required
                 value={formData.salesPerson}
                 onChange={handleChange}
-                className="mt-1 block w-full rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm py-2 px-3"
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm text-gray-900 placeholder-gray-600"
               />
             </div>
 
@@ -205,7 +206,7 @@ export default function YeniZiyaret() {
                 rows={3}
                 value={formData.notes}
                 onChange={handleChange}
-                className="mt-1 block w-full rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm py-2 px-3"
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm text-gray-900 placeholder-gray-600"
               />
             </div>
 
@@ -218,7 +219,7 @@ export default function YeniZiyaret() {
                 id="result"
                 value={formData.result}
                 onChange={handleChange}
-                className="mt-1 block w-full rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm py-2 px-3"
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm text-gray-900 placeholder-gray-600"
               >
                 <option value="">Seçiniz</option>
                 <option value="Olumlu">Olumlu</option>
@@ -238,7 +239,7 @@ export default function YeniZiyaret() {
                 id="nextVisit"
                 value={formData.nextVisit}
                 onChange={handleChange}
-                className="mt-1 block w-full rounded-md border border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm py-2 px-3"
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm text-gray-900 placeholder-gray-600"
               />
             </div>
           </div>
@@ -249,6 +250,7 @@ export default function YeniZiyaret() {
               onClick={() => router.back()}
               className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
             >
+              <XMarkIcon className="h-5 w-5 mr-2" />
               İptal
             </button>
             <button
@@ -256,6 +258,7 @@ export default function YeniZiyaret() {
               disabled={loading}
               className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
             >
+              <CheckIcon className="h-5 w-5 mr-2" />
               {loading ? 'Kaydediliyor...' : 'Kaydet'}
             </button>
           </div>

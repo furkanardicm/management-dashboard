@@ -157,10 +157,10 @@ export default function ZiyaretYonetimi() {
                 <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Sonraki Ziyaret
                 </th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Durum
                 </th>
-                <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
                   İşlemler
                 </th>
               </tr>
@@ -198,31 +198,30 @@ export default function ZiyaretYonetimi() {
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                     {visit.nextVisit || '-'}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                      visit.status === 'completed' 
-                        ? 'bg-green-100 text-green-800'
-                        : visit.status === 'planned'
-                        ? 'bg-blue-100 text-blue-800'
-                        : 'bg-yellow-100 text-yellow-800'
+                  <td className="px-6 py-4 whitespace-nowrap text-center">
+                    <span className={`inline-flex items-center justify-center px-3 py-1 rounded-full text-xs font-medium ${
+                      visit.status === 'completed' ? 'bg-green-100 text-green-800' :
+                      visit.status === 'planned' ? 'bg-yellow-100 text-yellow-800' :
+                      'bg-red-100 text-red-800'
                     }`}>
-                      {visit.status === 'completed' ? 'Tamamlandı' : 
-                       visit.status === 'planned' ? 'Planlandı' : 'Beklemede'}
+                      {visit.status === 'completed' ? 'Tamamlandı' :
+                       visit.status === 'planned' ? 'Planlandı' :
+                       'İptal Edildi'}
                     </span>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                  <td className="px-6 py-4 whitespace-nowrap text-center text-sm font-medium">
                     <Link
                       href={`/dashboard/ziyaret/edit/${visit.id}`}
-                      className="text-indigo-600 hover:text-indigo-900 mr-4 inline-flex items-center"
+                      className="text-indigo-600 hover:text-indigo-900 inline-flex items-center mx-2"
                     >
-                      <PencilIcon className="h-4 w-4 mr-1" />
+                      <PencilIcon className="h-5 w-5 mr-1" />
                       Düzenle
                     </Link>
-                    <button 
-                      className="text-red-600 hover:text-red-900 inline-flex items-center"
-                      onClick={() => handleDeleteClick(visit.id)}
+                    <button
+                      onClick={() => setDeleteModal({ isOpen: true, visitId: visit.id })}
+                      className="text-red-600 hover:text-red-900 inline-flex items-center mx-2"
                     >
-                      <TrashIcon className="h-4 w-4 mr-1" />
+                      <TrashIcon className="h-5 w-5 mr-1" />
                       Sil
                     </button>
                   </td>

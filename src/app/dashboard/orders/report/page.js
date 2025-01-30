@@ -3,13 +3,14 @@
 import { useState, useEffect, useCallback } from 'react';
 import { ordersApi } from '@/lib/services/api';
 import { useRouter } from 'next/navigation';
-import { 
+import StatCard from '@/components/StatCard';
+import {
   ArrowLeftIcon,
-  DocumentChartBarIcon,
-  ArrowTrendingUpIcon,
+  DocumentTextIcon,
   CurrencyDollarIcon,
   BuildingOfficeIcon,
-  DocumentArrowDownIcon
+  DocumentArrowDownIcon,
+  ChartBarIcon
 } from '@heroicons/react/24/outline';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
@@ -27,10 +28,7 @@ export default function OrdersReport() {
   const [stats, setStats] = useState({
     totalOrders: 0,
     totalAmount: 0,
-    averageOrderValue: 0,
-    pendingOrders: 0,
-    approvedOrders: 0,
-    rejectedOrders: 0,
+    averageAmount: 0,
     companyStats: [],
     projectStats: []
   });
@@ -53,10 +51,7 @@ export default function OrdersReport() {
     // Temel istatistikler
     const totalOrders = filteredOrders.length;
     const totalAmount = filteredOrders.reduce((sum, order) => sum + order.amount, 0);
-    const averageOrderValue = totalAmount / totalOrders || 0;
-    const pendingOrders = filteredOrders.filter(order => order.status === 'pending').length;
-    const approvedOrders = filteredOrders.filter(order => order.status === 'approved').length;
-    const rejectedOrders = filteredOrders.filter(order => order.status === 'rejected').length;
+    const averageAmount = totalAmount / totalOrders || 0;
 
     // Şirket bazlı istatistikler
     const companyStats = filteredOrders.reduce((acc, order) => {
@@ -93,10 +88,7 @@ export default function OrdersReport() {
     setStats({
       totalOrders,
       totalAmount,
-      averageOrderValue,
-      pendingOrders,
-      approvedOrders,
-      rejectedOrders,
+      averageAmount,
       companyStats,
       projectStats
     });
@@ -152,10 +144,7 @@ export default function OrdersReport() {
     const generalStats = [
       ['Toplam Sipariş', stats.totalOrders.toString()],
       ['Toplam Tutar', formatCurrency(stats.totalAmount)],
-      ['Ortalama Sipariş Tutarı', formatCurrency(stats.averageOrderValue)],
-      ['Bekleyen Siparişler', stats.pendingOrders.toString()],
-      ['Onaylanan Siparişler', stats.approvedOrders.toString()],
-      ['Reddedilen Siparişler', stats.rejectedOrders.toString()]
+      ['Ortalama Sipariş Tutarı', formatCurrency(stats.averageAmount)]
     ];
 
     doc.autoTable({
@@ -261,98 +250,27 @@ export default function OrdersReport() {
 
       {/* Genel İstatistikler */}
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-        <div className="bg-white overflow-hidden shadow rounded-lg">
-          <div className="p-5">
-            <div className="flex items-center">
-              <div className="flex-shrink-0">
-                <DocumentChartBarIcon className="h-6 w-6 text-gray-400" />
-              </div>
-              <div className="ml-5 w-0 flex-1">
-                <dl>
-                  <dt className="text-sm font-medium text-gray-500 truncate">
-                    Toplam Sipariş
-                  </dt>
-                  <dd className="flex items-baseline">
-                    <div className="text-2xl font-semibold text-gray-900">
-                      {stats.totalOrders}
-                    </div>
-                  </dd>
-                </dl>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white overflow-hidden shadow rounded-lg">
-          <div className="p-5">
-            <div className="flex items-center">
-              <div className="flex-shrink-0">
-                <CurrencyDollarIcon className="h-6 w-6 text-gray-400" />
-              </div>
-              <div className="ml-5 w-0 flex-1">
-                <dl>
-                  <dt className="text-sm font-medium text-gray-500 truncate">
-                    Toplam Tutar
-                  </dt>
-                  <dd className="flex items-baseline">
-                    <div className="text-2xl font-semibold text-gray-900">
-                      {formatCurrency(stats.totalAmount)}
-                    </div>
-                  </dd>
-                </dl>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white overflow-hidden shadow rounded-lg">
-          <div className="p-5">
-            <div className="flex items-center">
-              <div className="flex-shrink-0">
-                <ArrowTrendingUpIcon className="h-6 w-6 text-gray-400" />
-              </div>
-              <div className="ml-5 w-0 flex-1">
-                <dl>
-                  <dt className="text-sm font-medium text-gray-500 truncate">
-                    Ortalama Sipariş Tutarı
-                  </dt>
-                  <dd className="flex items-baseline">
-                    <div className="text-2xl font-semibold text-gray-900">
-                      {formatCurrency(stats.averageOrderValue)}
-                    </div>
-                  </dd>
-                </dl>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Sipariş Durumları */}
-      <div className="bg-white shadow rounded-lg overflow-hidden">
-        <div className="px-4 py-5 sm:p-6">
-          <h3 className="text-lg font-medium text-gray-900">Sipariş Durumları</h3>
-          <div className="mt-5 grid grid-cols-1 gap-5 sm:grid-cols-3">
-            <div className="bg-yellow-50 p-4 rounded-lg">
-              <div className="text-yellow-800">
-                <p className="text-sm font-medium">Bekleyen</p>
-                <p className="mt-2 text-3xl font-semibold">{stats.pendingOrders}</p>
-              </div>
-            </div>
-            <div className="bg-green-50 p-4 rounded-lg">
-              <div className="text-green-800">
-                <p className="text-sm font-medium">Onaylanan</p>
-                <p className="mt-2 text-3xl font-semibold">{stats.approvedOrders}</p>
-              </div>
-            </div>
-            <div className="bg-red-50 p-4 rounded-lg">
-              <div className="text-red-800">
-                <p className="text-sm font-medium">Reddedilen</p>
-                <p className="mt-2 text-3xl font-semibold">{stats.rejectedOrders}</p>
-              </div>
-            </div>
-          </div>
-        </div>
+        <StatCard
+          title="Toplam Sipariş"
+          value={stats.totalOrders}
+          description="Sistemdeki toplam sipariş sayısı"
+          icon={DocumentTextIcon}
+          color="blue"
+        />
+        <StatCard
+          title="Toplam Tutar"
+          value={formatCurrency(stats.totalAmount)}
+          description="Tüm siparişlerin toplam tutarı"
+          icon={CurrencyDollarIcon}
+          color="green"
+        />
+        <StatCard
+          title="Ortalama Sipariş Tutarı"
+          value={formatCurrency(stats.averageAmount)}
+          description="Sipariş başına ortalama tutar"
+          icon={ChartBarIcon}
+          color="purple"
+        />
       </div>
 
       {/* Şirket Bazlı İstatistikler */}
@@ -403,7 +321,7 @@ export default function OrdersReport() {
       <div className="bg-white shadow rounded-lg overflow-hidden">
         <div className="px-4 py-5 sm:p-6">
           <h3 className="text-lg font-medium text-gray-900 flex items-center">
-            <DocumentChartBarIcon className="h-5 w-5 mr-2" />
+            <DocumentTextIcon className="h-5 w-5 mr-2" />
             Proje Bazlı İstatistikler
           </h3>
           <div className="mt-4">

@@ -9,12 +9,21 @@ import {
   MagnifyingGlassIcon,
   ArrowPathIcon,
   DocumentArrowDownIcon,
-  PencilSquareIcon,
+  PencilIcon,
   CheckIcon,
-  XMarkIcon
+  XMarkIcon,
+  DocumentTextIcon,
+  CheckCircleIcon,
+  ClockIcon,
+  CurrencyDollarIcon,
+  TrashIcon,
+  PlusIcon
 } from '@heroicons/react/24/outline';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
+import Link from 'next/link';
+import StatCard from '@/components/StatCard';
+import exportToPdf from '@/components/PdfExport';
 
 export default function Orders() {
   const router = useRouter();
@@ -27,6 +36,12 @@ export default function Orders() {
     endDate: ''
   });
   const [editingOrder, setEditingOrder] = useState(null);
+  const [stats, setStats] = useState({
+    totalOrders: 0,
+    pendingOrders: 0,
+    approvedOrders: 0,
+    totalAmount: 0
+  });
 
   const filterOrders = useCallback(() => {
     let filtered = [...orders];
@@ -65,6 +80,15 @@ export default function Orders() {
       const data = await ordersApi.getOrders();
       setOrders(data);
       setFilteredOrders(data);
+      
+      // İstatistikleri hesapla
+      const statsData = {
+        totalOrders: data.length,
+        pendingOrders: data.filter(o => o.status === 'pending').length,
+        approvedOrders: data.filter(o => o.status === 'approved').length,
+        totalAmount: data.reduce((sum, o) => sum + o.amount, 0)
+      };
+      setStats(statsData);
     } catch (error) {
       console.error('Siparişler yüklenirken hata:', error);
     } finally {
@@ -227,73 +251,142 @@ export default function Orders() {
     }
   };
 
+  const handleDelete = async (orderId) => {
+    try {
+      setLoading(true);
+      await ordersApi.deleteOrder(orderId);
+      // Siparişleri yeniden yükle
+      await loadOrders();
+    } catch (error) {
+      console.error('Sipariş silinirken hata:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleExportPdf = () => {
+    const headers = ['Sipariş No', 'Müşteri', 'Proje', 'Tutar', 'Tarih', 'Durum'];
+    const data = filteredOrders.map(order => [
+      `#${order.id}`,
+      order.customerName,
+      order.projectName,
+      formatCurrency(order.amount),
+      formatDate(order.date),
+      order.status === 'pending' ? 'Bekliyor' :
+      order.status === 'approved' ? 'Onaylandı' :
+      order.status === 'rejected' ? 'Reddedildi' : 'Bilinmiyor'
+    ]);
+
+    exportToPdf({
+      title: 'Siparişler Listesi',
+      filename: 'siparisler.pdf',
+      headers,
+      data,
+      fontSize: 10,
+      orientation: 'landscape'
+    });
+  };
+
   if (loading) return <div>Yükleniyor...</div>;
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold text-gray-900">Siparişler</h1>
-        <div className="flex items-center space-x-2">
+    <div className="max-w-[1400px] mx-auto py-8">
+      <div className="sm:flex sm:items-center sm:justify-between mb-8">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Siparişler</h1>
+          <p className="mt-2 text-sm text-gray-700">
+            Tüm siparişlerin listesi ve istatistikleri
+          </p>
+        </div>
+        <div className="mt-4 sm:mt-0 flex items-center gap-x-3">
           <button
-            onClick={generatePDF}
-            className="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 rounded-md border border-gray-300 transition-colors duration-200"
+            type="button"
+            onClick={handleExportPdf}
+            className="inline-flex items-center gap-x-1.5 rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 border border-gray-300"
           >
-            <DocumentArrowDownIcon className="h-5 w-5 mr-2" />
+            <DocumentArrowDownIcon className="-ml-0.5 h-5 w-5" aria-hidden="true" />
             PDF İndir
           </button>
-          <button
-            onClick={() => router.push('/dashboard/orders/new')}
-            className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-md transition-colors duration-200"
+          <Link
+            href="/dashboard/orders/new"
+            className="inline-flex items-center px-4 py-2.5 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all duration-200 shadow-sm"
           >
-            <PlusCircleIcon className="h-5 w-5 mr-2" />
-            Yeni Sipariş
-          </button>
+            <PlusIcon className="-ml-0.5 h-5 w-5 mr-2" />
+            Yeni Sipariş Ekle
+          </Link>
         </div>
       </div>
 
+      {/* İstatistik Kartları */}
+      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4 mb-8">
+        <StatCard
+          title="Toplam Sipariş"
+          value={stats.totalOrders}
+          description="Sistemde kayıtlı tüm siparişler"
+          icon={DocumentTextIcon}
+          color="blue"
+        />
+        <StatCard
+          title="Bekleyen Siparişler"
+          value={stats.pendingOrders}
+          description="Onay bekleyen siparişler"
+          icon={ClockIcon}
+          color="yellow"
+        />
+        <StatCard
+          title="Onaylanan Siparişler"
+          value={stats.approvedOrders}
+          description="Onaylanmış siparişler"
+          icon={CheckCircleIcon}
+          color="green"
+        />
+        <StatCard
+          title="Toplam Tutar"
+          value={new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY' }).format(stats.totalAmount)}
+          description="Tüm siparişlerin toplam tutarı"
+          icon={CurrencyDollarIcon}
+          color="purple"
+        />
+      </div>
+
       {/* Filtreler */}
-      <div className="bg-white p-4 rounded-lg shadow space-y-4">
-        <div className="flex items-center justify-between">
-          <h2 className="text-lg font-medium text-gray-900 flex items-center">
-            <FunnelIcon className="h-5 w-5 mr-2" />
-            Filtreler
-          </h2>
-          <button
-            onClick={resetFilters}
-            className="text-sm text-gray-600 hover:text-gray-900"
-          >
-            Filtreleri Temizle
-          </button>
+      <div className="bg-white p-6 rounded-lg shadow mb-8">
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-x-2">
+            <FunnelIcon className="h-5 w-5 text-gray-500" />
+            <h2 className="text-lg font-medium text-gray-900">Filtreler</h2>
+          </div>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-3">
           <div>
-            <label className="block text-sm font-medium text-gray-700">Proje</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Proje</label>
             <select
               value={selectedProject}
               onChange={(e) => setSelectedProject(e.target.value)}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-gray-900 sm:text-sm"
+              className="block w-full rounded-md border-gray-300 py-2 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-gray-900 sm:text-sm"
             >
               <option value="">Tüm Projeler</option>
-              <option value="project1">Proje 1</option>
-              <option value="project2">Proje 2</option>
+              <option value="project1">E-Ticaret Platformu</option>
+              <option value="project2">Mobil Uygulama Geliştirme</option>
+              <option value="project3">Bulut Altyapı Projesi</option>
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700">Başlangıç Tarihi</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Başlangıç Tarihi</label>
             <input
               type="date"
               value={dateFilter.startDate}
               onChange={(e) => setDateFilter(prev => ({ ...prev, startDate: e.target.value }))}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-gray-900 sm:text-sm"
+              className="block w-full rounded-md border-gray-300 py-2 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-gray-900 sm:text-sm"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700">Bitiş Tarihi</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Bitiş Tarihi</label>
             <input
               type="date"
               value={dateFilter.endDate}
               onChange={(e) => setDateFilter(prev => ({ ...prev, endDate: e.target.value }))}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-gray-900 sm:text-sm"
+              className="block w-full rounded-md border-gray-300 py-2 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-gray-900 sm:text-sm"
             />
           </div>
         </div>
@@ -308,8 +401,11 @@ export default function Orders() {
                 <th scope="col" className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-24">
                   Sipariş No
                 </th>
-                <th scope="col" className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Müşteri
+                </th>
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Proje
                 </th>
                 <th scope="col" className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-32">
                   Tutar
@@ -320,7 +416,7 @@ export default function Orders() {
                 <th scope="col" className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-32">
                   Durum
                 </th>
-                <th scope="col" className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-24">
+                <th scope="col" className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-32">
                   İşlemler
                 </th>
               </tr>
@@ -331,8 +427,12 @@ export default function Orders() {
                   <td className="px-6 py-4 whitespace-nowrap text-center">
                     <span className="text-sm font-medium text-gray-900">#{order.id}</span>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-center">
-                    <span className="text-sm text-gray-900">{order.customerName}</span>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="text-sm font-medium text-gray-900">{order.customerName}</div>
+                    <div className="text-sm text-gray-500">{order.contact}</div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="text-sm text-gray-900">{order.projectName}</div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-center">
                     <span className="text-sm font-medium text-gray-900">{formatCurrency(order.amount)}</span>
@@ -348,47 +448,21 @@ export default function Orders() {
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-center">
-                    <div className="flex items-center justify-center space-x-2">
-                      <button
-                        onClick={() => router.push(`/dashboard/orders/${order.id}`)}
-                        className="inline-flex items-center justify-center p-2 text-indigo-600 hover:text-indigo-900 hover:bg-indigo-50 rounded-full transition-colors duration-200"
-                        title="Sipariş Detayı"
+                    <div className="flex items-center justify-center space-x-3">
+                      <Link
+                        href={`/dashboard/orders/edit/${order.id}`}
+                        className="text-indigo-600 hover:text-indigo-900 inline-flex items-center text-sm font-medium"
                       >
-                        <MagnifyingGlassIcon className="h-5 w-5" />
+                        <PencilIcon className="h-4 w-4 mr-1" />
+                        Düzenle
+                      </Link>
+                      <button
+                        onClick={() => handleDelete(order.id)}
+                        className="text-red-600 hover:text-red-900 inline-flex items-center text-sm font-medium"
+                      >
+                        <TrashIcon className="h-4 w-4 mr-1" />
+                        Sil
                       </button>
-                      {editingOrder === order.id ? (
-                        <>
-                          <button
-                            onClick={() => handleStatusUpdate(order.id, 'approved')}
-                            className="inline-flex items-center justify-center p-2 text-green-600 hover:text-green-900 hover:bg-green-50 rounded-full transition-colors duration-200"
-                            title="Onayla"
-                          >
-                            <CheckIcon className="h-5 w-5" />
-                          </button>
-                          <button
-                            onClick={() => handleStatusUpdate(order.id, 'rejected')}
-                            className="inline-flex items-center justify-center p-2 text-red-600 hover:text-red-900 hover:bg-red-50 rounded-full transition-colors duration-200"
-                            title="Reddet"
-                          >
-                            <XMarkIcon className="h-5 w-5" />
-                          </button>
-                          <button
-                            onClick={() => setEditingOrder(null)}
-                            className="inline-flex items-center justify-center p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-full transition-colors duration-200"
-                            title="İptal"
-                          >
-                            <XMarkIcon className="h-5 w-5" />
-                          </button>
-                        </>
-                      ) : (
-                        <button
-                          onClick={() => setEditingOrder(order.id)}
-                          className="inline-flex items-center justify-center p-2 text-indigo-600 hover:text-indigo-900 hover:bg-indigo-50 rounded-full transition-colors duration-200"
-                          title="Durumu Güncelle"
-                        >
-                          <PencilSquareIcon className="h-5 w-5" />
-                        </button>
-                      )}
                     </div>
                   </td>
                 </tr>

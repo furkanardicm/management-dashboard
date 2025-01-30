@@ -17,7 +17,8 @@ import {
   ClipboardDocumentListIcon,
   ChartBarIcon,
   ChevronLeftIcon,
-  ChevronRightIcon
+  ChevronRightIcon,
+  FolderIcon
 } from '@heroicons/react/24/outline';
 
 // Menü yapılandırması
@@ -25,6 +26,16 @@ const PROJECT_MANAGER_MENU = {
   'Sistem': [
     { name: 'Anasayfa', path: '/dashboard', icon: HomeIcon },
     { name: 'Kullanıcılar', path: '/dashboard/users', icon: UsersIcon },
+  ],
+  'PROJELER': [
+    {
+      name: 'Projeler',
+      icon: FolderIcon,
+      submenu: [
+        { name: 'Proje Listesi', path: '/dashboard/projects', icon: ClipboardDocumentListIcon },
+        { name: 'Yeni Proje', path: '/dashboard/projects/new', icon: PlusCircleIcon },
+      ]
+    },
   ],
   'Satışlar / Siparişler': [
     {
@@ -39,7 +50,7 @@ const PROJECT_MANAGER_MENU = {
     { name: 'Sponsor Firmalar', path: '/dashboard/sponsors', icon: BuildingOfficeIcon },
   ],
   'Satış Pazarlama': [
-    { name: 'Tip Müşteri Yönetimi', path: '/dashboard/tip-musteri', icon: UserGroupIcon },
+    { name: 'Tıp Müşteri Yönetimi', path: '/dashboard/tip-musteri', icon: UserGroupIcon },
     { name: 'Kamu Müşteri Yönetimi', path: '/dashboard/kamu-musteri', icon: BuildingOfficeIcon },
     { name: 'Rakip Firma Takibi', path: '/dashboard/rakip-firma', icon: ChartBarIcon },
     { name: 'İhale / Teklif Yönetimi', path: '/dashboard/ihale-teklif', icon: DocumentTextIcon },
@@ -50,6 +61,16 @@ const PROJECT_MANAGER_MENU = {
 const ACCOUNTANT_MENU = {
   'Sistem': [
     { name: 'Anasayfa', path: '/dashboard', icon: HomeIcon },
+  ],
+  'PROJELER': [
+    {
+      name: 'Projeler',
+      icon: FolderIcon,
+      submenu: [
+        { name: 'Proje Listesi', path: '/dashboard/projects', icon: ClipboardDocumentListIcon },
+        { name: 'Yeni Proje', path: '/dashboard/projects/new', icon: PlusCircleIcon },
+      ]
+    },
   ],
   'Satınalma': [
     { name: 'Gider Belgelerini Listele', path: '/dashboard/expenses', icon: DocumentTextIcon },

@@ -26,7 +26,13 @@ export default function IhaleTeklifYonetimi() {
         
         // İstatistikleri hesapla
         const activeTenders = data.filter(t => t.status === 'active');
-        const totalBidAmount = data.reduce((sum, t) => sum + parseFloat(t.ourBid.replace(/[^0-9.-]+/g, '')), 0);
+        const totalBidAmount = data.reduce((sum, t) => {
+          // TL ve boşlukları kaldır
+          const valueWithoutCurrency = t.ourBid.replace(/[^0-9.,]/g, '');
+          // Tüm noktaları kaldır, virgülü noktaya çevir
+          const cleanValue = valueWithoutCurrency.replace(/\./g, '').replace(',', '.');
+          return sum + parseFloat(cleanValue);
+        }, 0);
         const wonTenders = data.filter(t => t.status === 'won').length;
 
         setStats({
@@ -98,9 +104,9 @@ export default function IhaleTeklifYonetimi() {
           color="yellow"
         />
         <StatCard
-          title="Toplam Teklif"
+          title="Toplam Teklif Tutarı"
           value={new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY' }).format(stats.totalBidAmount)}
-          description="Verilen toplam teklif tutarı"
+          description="Tarafımızdan verilen tekliflerin toplamı"
           icon={CurrencyDollarIcon}
           color="purple"
         />
@@ -140,10 +146,10 @@ export default function IhaleTeklifYonetimi() {
                   <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
                     Teklifimiz
                   </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
+                  <th scope="col" className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
                     Durum
                   </th>
-                  <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
+                  <th scope="col" className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
                     İşlemler
                   </th>
                 </tr>
@@ -172,8 +178,8 @@ export default function IhaleTeklifYonetimi() {
                     <td className="px-6 py-4 text-sm text-gray-500 whitespace-nowrap">
                       {tender.ourBid}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                    <td className="px-6 py-4 whitespace-nowrap text-center">
+                      <span className={`inline-flex items-center justify-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
                         tender.status === 'active' 
                           ? 'bg-green-100 text-green-800' 
                           : tender.status === 'pending'
@@ -184,16 +190,16 @@ export default function IhaleTeklifYonetimi() {
                          tender.status === 'pending' ? 'Beklemede' : 'Pasif'}
                       </span>
                     </td>
-                    <td className="px-6 py-4 text-right text-sm font-medium whitespace-nowrap">
+                    <td className="px-6 py-4 text-center text-sm font-medium whitespace-nowrap">
                       <Link
                         href={`/dashboard/ihale-teklif/edit/${tender.id}`}
-                        className="text-indigo-600 hover:text-indigo-900 mr-4 inline-flex items-center"
+                        className="text-indigo-600 hover:text-indigo-900 mx-2 inline-flex items-center"
                       >
                         <PencilIcon className="h-4 w-4 mr-1" />
                         Düzenle
                       </Link>
                       <button 
-                        className="text-red-600 hover:text-red-900 inline-flex items-center"
+                        className="text-red-600 hover:text-red-900 mx-2 inline-flex items-center"
                         onClick={() => handleDeleteClick(tender.id)}
                       >
                         <TrashIcon className="h-4 w-4 mr-1" />

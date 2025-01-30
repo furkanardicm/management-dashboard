@@ -14,22 +14,79 @@ const companies = [
 
 // Örnek projeler listesi
 const projects = [
-  { id: 'project1', name: 'E-Ticaret Platformu', company: companies[0].name },
-  { id: 'project2', name: 'Mobil Uygulama Geliştirme', company: companies[1].name },
-  { id: 'project3', name: 'Bulut Altyapı Projesi', company: companies[2].name }
+  { 
+    id: 'project1', 
+    name: 'E-Ticaret Platformu', 
+    description: 'Online alışveriş platformu geliştirme projesi',
+    manager: 'Ahmet Yılmaz',
+    company: companies[0].name,
+    status: 'active'
+  },
+  { 
+    id: 'project2', 
+    name: 'Mobil Uygulama Geliştirme', 
+    description: 'iOS ve Android için mobil uygulama geliştirme projesi',
+    manager: 'Mehmet Demir',
+    company: companies[1].name,
+    status: 'active'
+  },
+  { 
+    id: 'project3', 
+    name: 'Bulut Altyapı Projesi', 
+    description: 'Bulut tabanlı altyapı modernizasyon projesi',
+    manager: 'Ayşe Kaya',
+    company: companies[2].name,
+    status: 'completed'
+  }
+];
+
+// Örnek kullanıcılar listesi
+let users = [
+  { id: 1, name: 'Ahmet Yılmaz', email: 'ahmet@teknoloji.com', role: 'admin', status: 'active' },
+  { id: 2, name: 'Mehmet Demir', email: 'mehmet@yazilim.com', role: 'user', status: 'active' },
+  { id: 3, name: 'Ayşe Kaya', email: 'ayse@dijital.com', role: 'user', status: 'active' },
+  { id: 4, name: 'Fatma Şahin', email: 'fatma@inovasyon.com', role: 'user', status: 'inactive' },
+  { id: 5, name: 'Ali Yıldız', email: 'ali@bilisim.com', role: 'admin', status: 'active' }
 ];
 
 // Kullanıcılar API
 export const usersApi = {
   async getUsers() {
     await delay(500);
-    return [
-      { id: 1, name: 'Ahmet Yılmaz', email: 'ahmet@teknoloji.com', role: 'PROJECT_MANAGER', company: companies[0].name },
-      { id: 2, name: 'Mehmet Demir', email: 'mehmet@yazilim.com', role: 'ACCOUNTANT', company: companies[1].name },
-      { id: 3, name: 'Ayşe Kaya', email: 'ayse@dijital.com', role: 'PROJECT_MANAGER', company: companies[2].name },
-      { id: 4, name: 'Fatma Şahin', email: 'fatma@inovasyon.com', role: 'ACCOUNTANT', company: companies[3].name },
-      { id: 5, name: 'Ali Yıldız', email: 'ali@bilisim.com', role: 'PROJECT_MANAGER', company: companies[4].name }
-    ];
+    return [...users];
+  },
+
+  async getUser(id) {
+    await delay(500);
+    const user = users.find(u => u.id === parseInt(id));
+    if (!user) throw new Error('Kullanıcı bulunamadı');
+    return { ...user };
+  },
+
+  async createUser(data) {
+    await delay(500);
+    const newUser = {
+      id: users.length + 1,
+      ...data
+    };
+    users.push(newUser);
+    return { ...newUser };
+  },
+
+  async updateUser(id, data) {
+    await delay(500);
+    const index = users.findIndex(u => u.id === parseInt(id));
+    if (index === -1) throw new Error('Kullanıcı bulunamadı');
+    users[index] = { ...users[index], ...data };
+    return { ...users[index] };
+  },
+
+  async deleteUser(id) {
+    await delay(500);
+    const index = users.findIndex(u => u.id === parseInt(id));
+    if (index === -1) throw new Error('Kullanıcı bulunamadı');
+    users.splice(index, 1);
+    return true;
   }
 };
 
@@ -51,6 +108,22 @@ export const sponsorsApi = {
     };
     companies.push(newSponsor);
     return newSponsor;
+  },
+
+  async updateSponsor(id, data) {
+    await delay(500);
+    const index = companies.findIndex(c => c.id === parseInt(id));
+    if (index === -1) throw new Error('Sponsor bulunamadı');
+    companies[index] = { ...companies[index], ...data };
+    return companies[index];
+  },
+
+  async deleteSponsor(id) {
+    await delay(500);
+    const index = companies.findIndex(c => c.id === parseInt(id));
+    if (index === -1) throw new Error('Sponsor bulunamadı');
+    companies.splice(index, 1);
+    return true;
   }
 };
 
@@ -135,6 +208,30 @@ export const ordersApi = {
   getOrders: async () => {
     await delay(500);
     return [...orders];
+  },
+
+  getOrder: async (orderId) => {
+    await delay(500);
+    const order = orders.find(order => order.id === parseInt(orderId));
+    if (!order) throw new Error('Sipariş bulunamadı');
+    return { ...order };
+  },
+
+  updateOrder: async (orderId, data) => {
+    await delay(500);
+    const orderIndex = orders.findIndex(order => order.id === parseInt(orderId));
+    if (orderIndex === -1) {
+      throw new Error('Sipariş bulunamadı');
+    }
+    
+    const project = projects.find(p => p.id === data.project);
+    orders[orderIndex] = {
+      ...orders[orderIndex],
+      ...data,
+      projectName: project.name
+    };
+    
+    return orders[orderIndex];
   },
 
   updateOrderStatus: async (orderId, newStatus) => {
@@ -920,6 +1017,48 @@ export const medicalApi = {
     const index = medicalCustomers.findIndex(c => c.id === parseInt(id));
     if (index === -1) throw new Error('Müşteri bulunamadı');
     medicalCustomers.splice(index, 1);
+    return true;
+  }
+};
+
+// Projeler API
+export const projectsApi = {
+  async getProjects() {
+    await delay(500);
+    return [...projects];
+  },
+
+  async getProject(id) {
+    await delay(500);
+    const project = projects.find(p => p.id === id);
+    if (!project) throw new Error('Proje bulunamadı');
+    return { ...project };
+  },
+
+  async createProject(data) {
+    await delay(500);
+    const newProject = {
+      id: `project${projects.length + 1}`,
+      ...data,
+      status: 'active'
+    };
+    projects.push(newProject);
+    return newProject;
+  },
+
+  async updateProject(id, data) {
+    await delay(500);
+    const index = projects.findIndex(p => p.id === id);
+    if (index === -1) throw new Error('Proje bulunamadı');
+    projects[index] = { ...projects[index], ...data };
+    return projects[index];
+  },
+
+  async deleteProject(id) {
+    await delay(500);
+    const index = projects.findIndex(p => p.id === id);
+    if (index === -1) throw new Error('Proje bulunamadı');
+    projects.splice(index, 1);
     return true;
   }
 }; 
