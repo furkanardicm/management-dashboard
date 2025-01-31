@@ -27,7 +27,7 @@ export default function StatCard({ title, value, description, icon: Icon, color 
       {/* İkon */}
       <div className={`inline-flex items-center justify-center p-3 rounded-lg ${lightColorClasses[color]}`}>
         <Icon className="h-6 w-6" />
-      </div>
+        </div>
 
       {/* İçerik */}
       <div className="mt-4">

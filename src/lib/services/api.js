@@ -236,7 +236,7 @@ export const ordersApi = {
 
   updateOrderStatus: async (orderId, newStatus) => {
     await delay(500);
-    const orderIndex = orders.findIndex(order => order.id === orderId);
+    const orderIndex = orders.findIndex(order => order.id === parseInt(orderId));
     if (orderIndex === -1) {
       throw new Error('Sipariş bulunamadı');
     }
@@ -305,29 +305,34 @@ export const expensesApi = {
     return [...expenses];
   },
   
-  async createExpense(formData) {
-    await delay(1000);
-    
-    const file = formData.get('document');
-    if (!file || file.type !== 'application/pdf') {
-      throw new Error('Geçersiz dosya formatı');
+  async getExpense(id) {
+    await delay(500);
+    const expense = expenses.find(e => e.id === parseInt(id));
+    if (!expense) {
+      throw new Error('Gider belgesi bulunamadı');
     }
+    return { ...expense };
+  },
 
-    const project = projects.find(p => p.id === formData.get('project'));
+  async createExpense(data) {
+    await delay(500);
     const newExpense = {
       id: expenses.length + 1,
-      amount: parseFloat(formData.get('amount')),
-      description: formData.get('description'),
-      expenseDate: formData.get('expenseDate'),
-      documentUrl: URL.createObjectURL(file),
-      status: 'pending',
-      project: formData.get('project'),
-      projectName: project.name,
-      company: project.company
+      ...data,
+      status: data.status || 'pending'
     };
-
     expenses.push(newExpense);
     return newExpense;
+  },
+
+  async updateExpense(id, data) {
+    await delay(500);
+    const index = expenses.findIndex(e => e.id === parseInt(id));
+    if (index === -1) {
+      throw new Error('Gider belgesi bulunamadı');
+    }
+    expenses[index] = { ...expenses[index], ...data };
+    return expenses[index];
   },
 
   async updateExpenseStatus(expenseId, newStatus) {
@@ -341,25 +346,92 @@ export const expensesApi = {
   }
 };
 
-// Ödeme Talepleri API
+// Ödeme Talepleri
+let paymentRequests = [
+  {
+    id: 1,
+    amount: 5000,
+    description: 'Tedarikçi Ödemesi',
+    requestDate: '2024-03-14',
+    status: 'pending',
+    company: companies[0].name,
+    project: projects[0].name
+  },
+  {
+    id: 2,
+    amount: 3500,
+    description: 'Yazılım Lisans Ödemesi',
+    requestDate: '2024-03-15',
+    status: 'approved',
+    company: companies[1].name,
+    project: projects[1].name
+  },
+  {
+    id: 3,
+    amount: 2800,
+    description: 'Donanım Alımı',
+    requestDate: '2024-03-16',
+    status: 'rejected',
+    company: companies[2].name,
+    project: projects[2].name
+  }
+];
+
 export const paymentRequestsApi = {
   async getPaymentRequests() {
     await delay(500);
-    return [
-      {
-        id: 1,
-        amount: 5000,
-        description: 'Tedarikçi Ödemesi',
-        requestDate: '2024-03-14',
-        status: 'pending'
-      },
-      // ... diğer talepler
-    ];
+    return [...paymentRequests];
+  },
+
+  async getPaymentRequest(id) {
+    await delay(500);
+    const request = paymentRequests.find(r => r.id === parseInt(id));
+    if (!request) {
+      throw new Error('Ödeme talebi bulunamadı');
+    }
+    return { ...request };
   },
   
   async createPaymentRequest(data) {
     await delay(500);
-    return { id: Date.now(), ...data };
+    const newRequest = {
+      id: paymentRequests.length + 1,
+      ...data,
+      requestDate: new Date().toISOString().split('T')[0],
+      status: 'pending'
+    };
+    paymentRequests.push(newRequest);
+    return newRequest;
+  },
+
+  async updatePaymentRequest(id, data) {
+    await delay(500);
+    const index = paymentRequests.findIndex(r => r.id === parseInt(id));
+    if (index === -1) {
+      throw new Error('Ödeme talebi bulunamadı');
+    }
+    paymentRequests[index] = { ...paymentRequests[index], ...data };
+    return paymentRequests[index];
+  },
+
+  async updatePaymentRequestStatus(id, newStatus) {
+    await delay(500);
+    const index = paymentRequests.findIndex(r => r.id === parseInt(id));
+    if (index === -1) {
+      throw new Error('Ödeme talebi bulunamadı');
+    }
+    paymentRequests[index] = { ...paymentRequests[index], status: newStatus };
+    return { success: true, message: 'Ödeme talebi durumu güncellendi' };
+  },
+
+  async deletePaymentRequest(id) {
+    await delay(500);
+    const index = paymentRequests.findIndex(r => r.id === parseInt(id));
+    if (index === -1) {
+      throw new Error('Ödeme talebi bulunamadı');
+    }
+    paymentRequests.splice(index, 1);
+    return true;
   }
 };
 

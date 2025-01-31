@@ -5,8 +5,9 @@ import { useRouter } from 'next/navigation';
 import { paymentRequestsApi, sponsorsApi, projectsApi } from '@/lib/services/api';
 import { XMarkIcon, CheckIcon } from '@heroicons/react/24/outline';
 
-export default function YeniOdemeTalebi() {
+export default function OdemeTalebiDuzenle({ params }) {
   const router = useRouter();
+  const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [companies, setCompanies] = useState([]);
   const [projects, setProjects] = useState([]);
@@ -15,27 +16,40 @@ export default function YeniOdemeTalebi() {
     amount: '',
     company: '',
     project: '',
-    requestDate: new Date().toISOString().split('T')[0],
-    status: 'pending'
+    requestDate: '',
+    status: ''
   });
 
   useEffect(() => {
     const loadData = async () => {
       try {
-        const [companiesData, projectsData] = await Promise.all([
+        const [paymentRequest, companiesData, projectsData] = await Promise.all([
+          paymentRequestsApi.getPaymentRequest(params.id),
           sponsorsApi.getSponsors(),
           projectsApi.getProjects()
         ]);
+
+        setFormData({
+          description: paymentRequest.description || '',
+          amount: paymentRequest.amount || '',
+          company: paymentRequest.company || '',
+          project: paymentRequest.project || '',
+          requestDate: paymentRequest.requestDate || '',
+          status: paymentRequest.status || 'pending'
+        });
         setCompanies(companiesData);
         setProjects(projectsData);
       } catch (error) {
         console.error('Veriler yüklenirken hata:', error);
-        alert('Veriler yüklenirken bir hata oluştu');
+        alert(error.message || 'Veriler yüklenirken bir hata oluştu');
+        router.push('/dashboard/payment-requests');
+      } finally {
+        setLoading(false);
       }
     };
 
     loadData();
-  }, []);
+  }, [params.id, router]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -54,25 +68,33 @@ export default function YeniOdemeTalebi() {
         throw new Error('Lütfen tüm alanları doldurun');
       }
 
-      await paymentRequestsApi.createPaymentRequest(formData);
+      await paymentRequestsApi.updatePaymentRequest(params.id, formData);
       router.push('/dashboard/payment-requests');
     } catch (error) {
-      console.error('Ödeme talebi oluşturulurken hata:', error);
-      alert(error.message || 'Ödeme talebi oluşturulurken bir hata oluştu');
+      console.error('Ödeme talebi güncellenirken hata:', error);
+      alert(error.message || 'Ödeme talebi güncellenirken bir hata oluştu');
     } finally {
       setSaving(false);
     }
   };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-[1400px] mx-auto py-6">
       <div className="md:flex md:items-center md:justify-between mb-6">
         <div className="min-w-0 flex-1">
           <h2 className="text-2xl font-bold leading-7 text-gray-900 sm:truncate sm:text-3xl sm:tracking-tight">
-            Yeni Ödeme Talebi
+            Ödeme Talebi Düzenle
           </h2>
           <p className="mt-2 text-sm text-gray-500">
-            Yeni bir ödeme talebi oluşturmak için formu doldurun
+            Ödeme talebi bilgilerini güncellemek için formu kullanın
           </p>
         </div>
       </div>
@@ -160,6 +182,26 @@ export default function YeniOdemeTalebi() {
                       {project.name}
                     </option>
                   ))}
+                </select>
+              </div>
+            </div>
+
+            <div className="sm:col-span-2">
+              <label htmlFor="status" className="block text-sm font-medium leading-6 text-gray-900">
+                Durum
+              </label>
+              <div className="mt-2">
+                <select
+                  name="status"
+                  id="status"
+                  required
+                  value={formData.status}
+                  onChange={handleChange}
+                  className="block w-full rounded-md border border-gray-300 py-1.5 text-gray-900 shadow-sm focus:ring-2 focus:ring-indigo-600 focus-visible:outline-none sm:text-sm sm:leading-6 cursor-pointer"
+                >
+                  <option value="pending">Bekliyor</option>
+                  <option value="approved">Onaylandı</option>
+                  <option value="rejected">Reddedildi</option>
                 </select>
               </div>
             </div>

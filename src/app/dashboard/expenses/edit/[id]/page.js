@@ -1,19 +1,45 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { expensesApi } from '@/lib/services/api';
 import { XMarkIcon, CheckIcon } from '@heroicons/react/24/outline';
 
-export default function YeniGiderBelgesi() {
+export default function GiderBelgesiDuzenle({ params }) {
   const router = useRouter();
+  const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [formData, setFormData] = useState({
     description: '',
     amount: '',
-    date: new Date().toISOString().split('T')[0],
-    status: 'pending'
+    date: '',
+    status: ''
   });
+
+  useEffect(() => {
+    const loadExpense = async () => {
+      try {
+        const data = await expensesApi.getExpense(params.id);
+        if (!data) {
+          throw new Error('Gider belgesi bulunamadı');
+        }
+        setFormData({
+          description: data.description || '',
+          amount: data.amount || '',
+          date: data.date ? new Date(data.date).toISOString().split('T')[0] : '',
+          status: data.status || 'pending'
+        });
+      } catch (error) {
+        console.error('Gider belgesi yüklenirken hata:', error);
+        alert(error.message || 'Gider belgesi yüklenirken bir hata oluştu');
+        router.push('/dashboard/expenses');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadExpense();
+  }, [params.id, router]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -32,25 +58,33 @@ export default function YeniGiderBelgesi() {
         throw new Error('Lütfen tüm alanları doldurun');
       }
 
-      await expensesApi.createExpense(formData);
+      await expensesApi.updateExpense(params.id, formData);
       router.push('/dashboard/expenses');
     } catch (error) {
-      console.error('Gider belgesi oluşturulurken hata:', error);
-      alert(error.message || 'Gider belgesi oluşturulurken bir hata oluştu');
+      console.error('Gider belgesi güncellenirken hata:', error);
+      alert(error.message || 'Gider belgesi güncellenirken bir hata oluştu');
     } finally {
       setSaving(false);
     }
   };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-[1400px] mx-auto py-6">
       <div className="md:flex md:items-center md:justify-between mb-6">
         <div className="min-w-0 flex-1">
           <h2 className="text-2xl font-bold leading-7 text-gray-900 sm:truncate sm:text-3xl sm:tracking-tight">
-            Yeni Gider Belgesi
+            Gider Belgesi Düzenle
           </h2>
           <p className="mt-2 text-sm text-gray-500">
-            Yeni bir gider belgesi eklemek için formu doldurun
+            Gider belgesi bilgilerini güncellemek için formu kullanın
           </p>
         </div>
       </div>
