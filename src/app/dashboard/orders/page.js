@@ -24,6 +24,7 @@ import 'jspdf-autotable';
 import Link from 'next/link';
 import StatCard from '@/components/StatCard';
 import exportToPdf from '@/components/PdfExport';
+import DeleteConfirmationModal from '@/components/DeleteConfirmationModal';
 
 export default function Orders() {
   const router = useRouter();
@@ -42,6 +43,7 @@ export default function Orders() {
     approvedOrders: 0,
     totalAmount: 0
   });
+  const [deleteModal, setDeleteModal] = useState({ isOpen: false, orderId: null });
 
   const filterOrders = useCallback(() => {
     let filtered = [...orders];
@@ -253,14 +255,12 @@ export default function Orders() {
 
   const handleDelete = async (orderId) => {
     try {
-      setLoading(true);
       await ordersApi.deleteOrder(orderId);
-      // Siparişleri yeniden yükle
       await loadOrders();
+      setDeleteModal({ isOpen: false, orderId: null });
     } catch (error) {
       console.error('Sipariş silinirken hata:', error);
-    } finally {
-      setLoading(false);
+      alert('Sipariş silinirken bir hata oluştu');
     }
   };
 
@@ -457,7 +457,7 @@ export default function Orders() {
                         Düzenle
                       </Link>
                       <button
-                        onClick={() => handleDelete(order.id)}
+                        onClick={() => setDeleteModal({ isOpen: true, orderId: order.id })}
                         className="text-red-600 hover:text-red-900 inline-flex items-center text-sm font-medium"
                       >
                         <TrashIcon className="h-4 w-4 mr-1" />
@@ -471,6 +471,13 @@ export default function Orders() {
           </table>
         </div>
       </div>
+      <DeleteConfirmationModal
+        isOpen={deleteModal.isOpen}
+        onClose={() => setDeleteModal({ isOpen: false, orderId: null })}
+        onConfirm={() => handleDelete(deleteModal.orderId)}
+        title="Sipariş Silme"
+        message="Bu siparişi silmek istediğinizden emin misiniz? Bu işlem geri alınamaz."
+      />
     </div>
   );
 } 

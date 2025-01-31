@@ -7,6 +7,7 @@ import { PlusIcon, PencilIcon, TrashIcon, FolderIcon, CheckCircleIcon, ClockIcon
 import StatCard from '@/components/StatCard';
 import exportToPdf from '@/components/PdfExport';
 import Link from 'next/link';
+import DeleteConfirmationModal from '@/components/DeleteConfirmationModal';
 
 export default function Projeler() {
   const router = useRouter();
@@ -18,6 +19,7 @@ export default function Projeler() {
     completed: 0,
     pending: 0
   });
+  const [deleteModal, setDeleteModal] = useState({ isOpen: false, projectId: null });
 
   useEffect(() => {
     loadProjects();
@@ -45,11 +47,10 @@ export default function Projeler() {
   };
 
   const handleDelete = async (id) => {
-    if (!confirm('Bu projeyi silmek istediğinizden emin misiniz?')) return;
-
     try {
       await projectsApi.deleteProject(id);
       await loadProjects();
+      setDeleteModal({ isOpen: false, projectId: null });
     } catch (error) {
       console.error('Proje silinirken hata:', error);
       alert('Proje silinirken bir hata oluştu');
@@ -230,7 +231,7 @@ export default function Projeler() {
                             Düzenle
                           </button>
                           <button
-                            onClick={() => handleDelete(project.id)}
+                            onClick={() => setDeleteModal({ isOpen: true, projectId: project.id })}
                             className="inline-flex items-center gap-x-1.5 text-red-600 hover:text-red-900"
                           >
                             <TrashIcon className="h-4 w-4" />
@@ -253,6 +254,13 @@ export default function Projeler() {
           </div>
         </div>
       </div>
+      <DeleteConfirmationModal
+        isOpen={deleteModal.isOpen}
+        onClose={() => setDeleteModal({ isOpen: false, projectId: null })}
+        onConfirm={() => handleDelete(deleteModal.projectId)}
+        title="Proje Silme"
+        message="Bu projeyi silmek istediğinizden emin misiniz? Bu işlem geri alınamaz."
+      />
     </div>
   );
 } 

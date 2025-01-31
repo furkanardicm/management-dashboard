@@ -11,6 +11,7 @@ import {
   UserGroupIcon
 } from '@heroicons/react/24/outline';
 import StatCard from '@/components/StatCard';
+import DeleteConfirmationModal from '@/components/DeleteConfirmationModal';
 
 export default function Users() {
   const router = useRouter();
@@ -21,6 +22,7 @@ export default function Users() {
     activeUsers: 0,
     adminUsers: 0
   });
+  const [deleteModal, setDeleteModal] = useState({ isOpen: false, userId: null });
 
   useEffect(() => {
     loadUsers();
@@ -49,13 +51,13 @@ export default function Users() {
   };
 
   const handleDelete = async (userId) => {
-    if (window.confirm('Bu kullanıcıyı silmek istediğinize emin misiniz?')) {
-      try {
-        await usersApi.deleteUser(userId);
-        await loadUsers(); // Listeyi yenile
-      } catch (error) {
-        console.error('Kullanıcı silinirken hata:', error);
-      }
+    try {
+      await usersApi.deleteUser(userId);
+      await loadUsers();
+      setDeleteModal({ isOpen: false, userId: null });
+    } catch (error) {
+      console.error('Kullanıcı silinirken hata:', error);
+      alert('Kullanıcı silinirken bir hata oluştu');
     }
   };
 
@@ -176,7 +178,7 @@ export default function Users() {
                           Düzenle
                         </button>
                         <button
-                          onClick={() => handleDelete(user.id)}
+                          onClick={() => setDeleteModal({ isOpen: true, userId: user.id })}
                           className="inline-flex items-center text-red-600 hover:text-red-900"
                         >
                           <TrashIcon className="h-4 w-4 mr-1" />
@@ -191,6 +193,13 @@ export default function Users() {
           </div>
         </div>
       </div>
+      <DeleteConfirmationModal
+        isOpen={deleteModal.isOpen}
+        onClose={() => setDeleteModal({ isOpen: false, userId: null })}
+        onConfirm={() => handleDelete(deleteModal.userId)}
+        title="Kullanıcı Silme"
+        message="Bu kullanıcıyı silmek istediğinizden emin misiniz? Bu işlem geri alınamaz."
+      />
     </div>
   );
 } 

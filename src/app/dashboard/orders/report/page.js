@@ -12,8 +12,7 @@ import {
   DocumentArrowDownIcon,
   ChartBarIcon
 } from '@heroicons/react/24/outline';
-import jsPDF from 'jspdf';
-import 'jspdf-autotable';
+import { exportToPdf } from '@/components/PdfExport';
 
 export default function OrdersReport() {
   const router = useRouter();
@@ -124,71 +123,63 @@ export default function OrdersReport() {
     return new Date(dateString).toLocaleDateString('tr-TR');
   };
 
-  const generatePDF = () => {
-    const doc = new jsPDF();
-    
-    // Başlık
-    doc.setFontSize(20);
-    doc.text('Satış Raporu', 15, 15);
-    doc.setFontSize(10);
-    doc.text(`Oluşturulma Tarihi: ${formatDate(new Date())}`, 15, 22);
+  const formatPdfCurrency = (amount) => {
+    return new Intl.NumberFormat('tr-TR', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    }).format(amount) + ' TL';
+  };
 
+  const generatePDF = () => {
+    // PDF başlığı için tarih filtresi bilgisi
+    let titleSuffix = '';
     if (dateFilter.startDate || dateFilter.endDate) {
-      doc.text(`Filtre: ${dateFilter.startDate ? formatDate(dateFilter.startDate) : ''} - ${dateFilter.endDate ? formatDate(dateFilter.endDate) : ''}`, 15, 29);
+      titleSuffix = ` (${dateFilter.startDate ? formatDate(dateFilter.startDate) : ''} - ${dateFilter.endDate ? formatDate(dateFilter.endDate) : ''})`;
     }
 
     // Genel İstatistikler
-    doc.setFontSize(14);
-    doc.text('Genel İstatistikler', 15, 40);
-    
-    const generalStats = [
+    const generalStatsHeaders = ['Metrik', 'Değer'];
+    const generalStatsData = [
       ['Toplam Sipariş', stats.totalOrders.toString()],
-      ['Toplam Tutar', formatCurrency(stats.totalAmount)],
-      ['Ortalama Sipariş Tutarı', formatCurrency(stats.averageAmount)]
+      ['Toplam Tutar', formatPdfCurrency(stats.totalAmount)],
+      ['Ortalama Sipariş Tutarı', formatPdfCurrency(stats.averageAmount)]
     ];
 
-    doc.autoTable({
-      startY: 45,
-      head: [['Metrik', 'Değer']],
-      body: generalStats,
-      theme: 'grid',
-      headStyles: { fillColor: [66, 66, 66] }
-    });
-
     // Şirket Bazlı İstatistikler
-    doc.setFontSize(14);
-    doc.text('Şirket Bazlı İstatistikler', 15, doc.autoTable.previous.finalY + 15);
-
-    doc.autoTable({
-      startY: doc.autoTable.previous.finalY + 20,
-      head: [['Şirket', 'Sipariş Sayısı', 'Toplam Tutar']],
-      body: stats.companyStats.map(company => [
-        company.name,
-        company.orderCount.toString(),
-        formatCurrency(company.totalAmount)
-      ]),
-      theme: 'grid',
-      headStyles: { fillColor: [66, 66, 66] }
-    });
+    const companyStatsHeaders = ['Şirket', 'Sipariş Sayısı', 'Toplam Tutar'];
+    const companyStatsData = stats.companyStats.map(company => [
+      company.name || 'Belirtilmemiş',
+      company.orderCount.toString(),
+      formatPdfCurrency(company.totalAmount)
+    ]);
 
     // Proje Bazlı İstatistikler
-    doc.setFontSize(14);
-    doc.text('Proje Bazlı İstatistikler', 15, doc.autoTable.previous.finalY + 15);
+    const projectStatsHeaders = ['Proje', 'Sipariş Sayısı', 'Toplam Tutar'];
+    const projectStatsData = stats.projectStats.map(project => [
+      project.name || 'Belirtilmemiş',
+      project.orderCount.toString(),
+      formatPdfCurrency(project.totalAmount)
+    ]);
 
-    doc.autoTable({
-      startY: doc.autoTable.previous.finalY + 20,
-      head: [['Proje', 'Sipariş Sayısı', 'Toplam Tutar']],
-      body: stats.projectStats.map(project => [
-        project.name,
-        project.orderCount.toString(),
-        formatCurrency(project.totalAmount)
-      ]),
-      theme: 'grid',
-      headStyles: { fillColor: [66, 66, 66] }
+    // PdfExport componentini kullanarak PDF oluştur
+    exportToPdf({
+      title: 'Satış Raporu' + titleSuffix,
+      filename: `satis_raporu_${new Date().toISOString().split('T')[0]}.pdf`,
+      headers: generalStatsHeaders,
+      data: [
+        ...generalStatsData,
+        ['', ''], // Boş satır
+        ['Şirket Bazlı İstatistikler', ''], // Alt başlık
+        companyStatsHeaders,
+        ...companyStatsData,
+        ['', ''], // Boş satır
+        ['Proje Bazlı İstatistikler', ''], // Alt başlık
+        projectStatsHeaders,
+        ...projectStatsData
+      ],
+      fontSize: 10,
+      orientation: 'portrait'
     });
-
-    // PDF'i indir
-    doc.save(`satis_raporu_${new Date().toISOString().split('T')[0]}.pdf`);
   };
 
   if (loading) {
