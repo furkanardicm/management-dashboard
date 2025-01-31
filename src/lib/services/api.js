@@ -279,7 +279,7 @@ let expenses = [
     id: 1,
     amount: 1500,
     description: 'Ofis malzemeleri',
-    expenseDate: '2024-03-15',
+    expenseDate: '15-03-2024',
     documentUrl: '/documents/expense1.pdf',
     status: 'pending',
     project: projects[0].id,
@@ -290,7 +290,7 @@ let expenses = [
     id: 2,
     amount: 2500,
     description: 'Yazılım lisansları',
-    expenseDate: '2024-03-14',
+    expenseDate: '14-03-2024',
     documentUrl: '/documents/expense2.pdf',
     status: 'approved',
     project: projects[1].id,
@@ -488,28 +488,24 @@ export const calendarApi = {
         id: 1,
         title: 'Yeni Yıl Kutlaması',
         start: new Date(2025, 0, 1),
-        end: new Date(2025, 0, 1),
         type: 'congress'
       },
       {
         id: 2,
         title: 'Doğum Günü - Mehmet Demir',
         start: new Date(2025, 0, 15),
-        end: new Date(2025, 0, 15),
         type: 'birthday'
       },
       {
         id: 3,
         title: 'Yıllık Planlama Toplantısı',
         start: new Date(2025, 0, 20, 10, 0),
-        end: new Date(2025, 0, 20, 12, 0),
         type: 'meeting'
       },
       {
         id: 4,
         title: 'Q1 Hedef Teslim Tarihi',
         start: new Date(2025, 0, 31),
-        end: new Date(2025, 0, 31),
         type: 'deadline'
       },
       
@@ -518,58 +514,50 @@ export const calendarApi = {
         id: 5,
         title: 'Doğum Günü - Ayşe Yılmaz',
         start: new Date(2025, 1, 5),
-        end: new Date(2025, 1, 5),
         type: 'birthday'
       },
       {
         id: 6,
         title: 'Teknoloji Konferansı',
         start: new Date(2025, 1, 12),
-        end: new Date(2025, 1, 14),
         type: 'congress'
       },
       {
         id: 7,
         title: 'Proje Değerlendirme',
         start: new Date(2025, 1, 20, 14, 0),
-        end: new Date(2025, 1, 20, 16, 0),
         type: 'meeting'
       },
       {
         id: 8,
         title: 'Bütçe Raporu Teslimi',
         start: new Date(2025, 1, 28),
-        end: new Date(2025, 1, 28),
         type: 'deadline'
       },
       
-      // Mart 2024 (Mevcut ayın etkinlikleri)
+      // Mart 2025
       {
         id: 9,
         title: 'Planlama Toplantısı',
-        start: new Date(2024, 2, 15, 10, 0),
-        end: new Date(2024, 2, 15, 11, 30),
+        start: new Date(2025, 2, 15, 10, 0),
         type: 'meeting'
       },
       {
         id: 10,
         title: 'Doğum Günü - Ahmet Yılmaz',
-        start: new Date(2024, 2, 20),
-        end: new Date(2024, 2, 20),
+        start: new Date(2025, 2, 20),
         type: 'birthday'
       },
       {
         id: 11,
         title: 'Görev Teslim Tarihi',
-        start: new Date(2024, 2, 25),
-        end: new Date(2024, 2, 25),
+        start: new Date(2025, 2, 25),
         type: 'deadline'
       },
       {
         id: 12,
         title: 'Kongre',
-        start: new Date(2024, 2, 28),
-        end: new Date(2024, 2, 30),
+        start: new Date(2025, 2, 28),
         type: 'congress'
       }
     ].filter(event => {

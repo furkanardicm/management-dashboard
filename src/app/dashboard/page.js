@@ -375,14 +375,14 @@ export default function Dashboard() {
             localizer={localizer}
             events={events}
             startAccessor="start"
-            endAccessor="end"
+            endAccessor="start"
             views={['month']}
             defaultView="month"
             popup={false}
             selectable={false}
             toolbar={true}
             date={date}
-            onNavigate={(newDate, view, action) => {
+            onNavigate={(newDate) => {
               setDate(newDate);
               const loadEvents = async () => {
                 try {
@@ -400,15 +400,6 @@ export default function Dashboard() {
               dayRangeHeaderFormat: ({ start, end }) => {
                 return `${format(start, 'dd MMMM', { locale: tr })} - ${format(end, 'dd MMMM', { locale: tr })}`;
               },
-            }}
-            messages={{
-              next: "İleri",
-              previous: "Geri",
-              today: "Bugün",
-              month: "Ay",
-              date: "Tarih",
-              noEventsInRange: "Bu aralıkta etkinlik yok.",
-              showMore: total => `+${total} etkinlik daha`
             }}
             components={{
               toolbar: (toolbarProps) => {

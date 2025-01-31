@@ -72,8 +72,17 @@ export default function Expenses() {
     }).format(amount);
   };
 
-  const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString('tr-TR');
+  const formatDate = (dateStr) => {
+    if (!dateStr) return '';
+    
+    try {
+      const [day, month, year] = dateStr.split('-');
+      const date = new Date(year, month - 1, day);
+      return new Intl.DateTimeFormat('tr-TR').format(date);
+    } catch (error) {
+      console.error('Tarih formatlanırken hata:', error);
+      return dateStr; // Hata durumunda orijinal değeri göster
+    }
   };
 
   const getStatusBadgeClass = (status) => {
@@ -95,7 +104,7 @@ export default function Expenses() {
       `#${expense.id}`,
       expense.description,
       formatCurrency(expense.amount),
-      formatDate(expense.date),
+      formatDate(expense.expenseDate),
       expense.status === 'pending' ? 'Bekliyor' :
       expense.status === 'approved' ? 'Onaylandı' :
       expense.status === 'rejected' ? 'Reddedildi' : 'Bilinmiyor'
@@ -188,7 +197,7 @@ export default function Expenses() {
                 <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Açıklama
                 </th>
-                <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Tutar
                 </th>
                 <th scope="col" className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -211,11 +220,11 @@ export default function Expenses() {
                   <td className="px-6 py-4 text-sm text-gray-500">
                     {expense.description}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-left">
                     {formatCurrency(expense.amount)}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
-                    {formatDate(expense.date)}
+                  <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500 text-center">
+                    {formatDate(expense.expenseDate)}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-center">
                     <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusBadgeClass(expense.status)}`}>
